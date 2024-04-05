@@ -13,8 +13,11 @@ class User(Base):
     email = Column(String, index=True, unique=True)
     password = Column(String)
     is_active = Column(Boolean, default=False)
+    is_owner = Column(Boolean, default=False)
 
     profile = relationship("Profile", uselist=False, backref="users")
+    posts = relationship("Post", uselist=True, backref="users")
+    comments = relationship("Comment", uselist=True, backref="users")
 
 
 class Profile(Base):
@@ -25,7 +28,7 @@ class Profile(Base):
     name = Column(String(25), index=True, nullable=True)
     last_name = Column(String(25), index=True, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    avatar = relationship("ProfileAvatar", uselist=False, backref="profile")
+    avatar = relationship("ProfileAvatar", uselist=False, backref="profiles")
 
 
 class ProfileAvatar(Base):
@@ -33,5 +36,27 @@ class ProfileAvatar(Base):
 
     id = Column(Integer, primary_key=True)
 
-    profile_id = Column(Integer, ForeignKey("profiles.id"))
+    profile_id = Column(Integer, ForeignKey("profiles.id"), index=True)
     avatar = Column(LargeBinary)
+
+
+# POST RELATED
+class Post(Base):
+    __tablename__ = "posts"
+
+    id = Column(Integer, primary_key=True)
+
+    title = Column(String, index=True)
+    body = Column(String)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    comments = relationship("Comment", uselist=True, backref="posts")
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+
+    id = Column(Integer, primary_key=True)
+
+    body = Column(String)
+    post_id = Column(Integer, ForeignKey("posts.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)

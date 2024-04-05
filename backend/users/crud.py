@@ -1,31 +1,29 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
 
 from backend import models, schemas
-from backend.db import get_session
+from backend.db import db_dependency, save_db_model, update_db_model
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-router = APIRouter(prefix="/users")
-
-session_db = get_session()
-db_dependency = Annotated[Session, Depends(get_session)]
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
-def get_user(db: db_dependency, email: int):
-    db_user = models.User
-    db_user = db.query(db_user).filter(db_user.email == email).first()
+# USER
+def get_user_by_email(db: db_dependency, email: str):
+    db_user = db.query(models.User).filter(models.User.email == email).first()
 
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
 
-def get_all_users(db: db_dependency):
-    return db.query(models.User).all()
+def get_user_by_id(db: db_dependency, id: int):
+    db_user = db.query(models.User).filter(models.User.id == id).first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
 
 
 @router.post("/create", response_model=schemas.User)
@@ -35,7 +33,6 @@ async def user_create(db: db_dependency, user: schemas.UserCreate):
     )
 
     if existing_user:
-        ""
         raise HTTPException(status_code=404, detail="User already exist")
 
     hashed_password = pwd_context.hash(user.password)
@@ -45,14 +42,44 @@ async def user_create(db: db_dependency, user: schemas.UserCreate):
     profile = models.Profile()
     new_user = models.User(**user.model_dump(), profile=profile)
 
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
+    save_db_model(db, new_user)
     return new_user
 
 
 @router.get("/", response_model=list[schemas.User])
 async def user_list(db: db_dependency):
-    users = get_all_users(db)
-    return users
+    return db.query(models.User).all()
+
+
+@router.get("/{user_id}", response_model=schemas.User)
+async def user_by_id(db: db_dependency, user_id: int):
+    return get_user_by_id(db, user_id)
+
+
+# PROFILE
+def get_profile(db: db_dependency, user_id: int):
+    db_profile = (
+        db.query(models.Profile).filter(models.Profile.user_id == user_id).first()
+    )
+
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return db_profile
+
+
+@router.get("/{user_id}/profile", response_model=schemas.Profile)
+async def user_profile(db: db_dependency, user_id: int):
+    return get_profile(db, user_id)
+
+
+@router.put("/{user_id}/profile", response_model=schemas.Profile)
+async def profile_update(
+    db: db_dependency, user_id: int, updated_profile: schemas.ProfileUpdate
+):
+    db_profile = get_profile(db, user_id)
+
+    for k, v in updated_profile:
+        setattr(db_profile, k, v)
+
+    update_db_model(db, db_profile)
+    return db_profile
