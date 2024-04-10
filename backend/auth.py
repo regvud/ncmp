@@ -12,7 +12,6 @@ import schemas
 from cross_related import pwd_context
 from db import db_dependency
 from exceptions import (
-    NOT_OWNER_EXCEPTION,
     TOKEN_EXPIRED_EXCEPTION,
     UNAUTHORIZED_EXCEPTION,
 )
@@ -62,23 +61,6 @@ def create_token(email: str, user_id: int, is_owner: bool, expire_delta: timedel
     encode.update({"exp": expires.timestamp()})
 
     return jwt.encode(encode, env.get("SECRET_KEY"), algorithm=env.get("ALGORITHM"))
-
-
-def authenticated_permission(token: str = Depends(oauth2_scheme)):
-    payload = decoder(token)
-    email: str = payload.get("email")
-    if email is None:
-        raise TOKEN_EXPIRED_EXCEPTION
-
-    auth_user = schemas.AuthenticatedUser(**payload)
-    return auth_user
-
-
-def owner_permission(token: str = Depends(oauth2_scheme)):
-    auth_user = authenticated_permission(token)
-    if not auth_user.is_owner:
-        raise NOT_OWNER_EXCEPTION
-    return auth_user
 
 
 @router.post("/login", response_model=Tokens)

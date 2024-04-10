@@ -1,8 +1,9 @@
+from fastapi import HTTPException
+
 import models
 import schemas
 from cross_related import pwd_context
 from db import db_dependency, save_db_model
-from fastapi import HTTPException
 
 
 # USER
@@ -38,6 +39,7 @@ def user_create(db: db_dependency, user: schemas.UserCreate):
 
 # PROFILE
 def get_profile(db: db_dependency, user_id: int):
+    print(user_id)
     db_profile = (
         db.query(models.Profile).filter(models.Profile.user_id == user_id).first()
     )

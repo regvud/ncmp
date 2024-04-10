@@ -7,4 +7,10 @@ TOKEN_EXPIRED_EXCEPTION = HTTPException(
 )
 
 UNAUTHORIZED_EXCEPTION = HTTPException(status_code=403, detail="Unauthorized user")
-NOT_OWNER_EXCEPTION = HTTPException(status_code=403, detail="User is not owner")
+
+
+def not_owner_exception(content_type: str):
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"User is not owner of this {content_type}",
+    )

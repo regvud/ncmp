@@ -33,20 +33,18 @@ class User(UserBase):
 
 
 class ProfileBase(BaseModel):
-    name: str | None
-    last_name: str | None
+    name: Optional[str] = None
+    last_name: Optional[str] = None
 
 
 class ProfileUpdate(ProfileBase):
     pass
 
 
-class ProfileCreate(ProfileBase):
-    user_id: int
-
-
-class Profile(ProfileCreate):
+class Profile(ProfileUpdate):
     id: int
+
+    user_id: int
     avatar: Optional["Avatar"] = None
 
     created_at: Optional[datetime]
@@ -101,13 +99,15 @@ class CommentUpdate(CommentBase):
 
 
 class CommentCreate(CommentBase):
-    post_id: int
-    user_id: int
-    replies: list["Reply"] = []
+    pass
 
 
 class Comment(CommentCreate):
     id: int
+
+    post_id: int
+    user_id: int
+    replies: list["Reply"] = []
 
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
@@ -118,15 +118,19 @@ class ReplyBase(BaseModel):
     body: str
 
 
-class ReplyCreate(ReplyBase):
-    comment_id: int
-    to_user: int
-    from_user: int
-
-
 class ReplyUpdate(ReplyBase):
+    pass
+
+
+class ReplyCreate(ReplyBase):
     pass
 
 
 class Reply(ReplyCreate):
     id: int
+
+    to_user: int
+    user_id: int
+
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]

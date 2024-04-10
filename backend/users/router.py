@@ -2,12 +2,36 @@ from fastapi import APIRouter, Depends
 
 import models
 import schemas
-from auth import authenticated_permission
 from db import db_dependency, update_db_model
+from permissions import authenticated_permission
 
 from .crud import get_profile, get_user_by_id, user_create
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+
+# PROFILE
+@router.get("/profile", response_model=schemas.Profile)
+async def user_profile(
+    db: db_dependency,
+    current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
+):
+    return get_profile(db, current_user.id)
+
+
+@router.put("/profile", response_model=schemas.Profile)
+async def profile_update(
+    db: db_dependency,
+    updated_profile: schemas.ProfileUpdate,
+    current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
+):
+    db_profile = get_profile(db, current_user.id)
+
+    for k, v in updated_profile:
+        setattr(db_profile, k, v)
+
+    update_db_model(db, db_profile)
+    return db_profile
 
 
 # USER
@@ -28,22 +52,3 @@ async def user_list(
 @router.get("/{user_id}", response_model=schemas.User)
 async def user_by_id(db: db_dependency, user_id: int):
     return get_user_by_id(db, user_id)
-
-
-# PROFILE
-@router.get("/{user_id}/profile", response_model=schemas.Profile)
-async def user_profile(db: db_dependency, user_id: int):
-    return get_profile(db, user_id)
-
-
-@router.put("/{user_id}/profile", response_model=schemas.Profile)
-async def profile_update(
-    db: db_dependency, user_id: int, updated_profile: schemas.ProfileUpdate
-):
-    db_profile = get_profile(db, user_id)
-
-    for k, v in updated_profile:
-        setattr(db_profile, k, v)
-
-    update_db_model(db, db_profile)
-    return db_profile

@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends
 
 import models
 import schemas
-from auth import authenticated_permission, owner_permission
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
-from users.crud import get_user_by_id
+from enums import ContentTypeEnum
+from permissions import authenticated_permission, delete_permission, owner_permission
 
-from .crud import get_comment_by_id, get_post_by_id
+from .crud import check_ownership, get_comment_by_id, get_post_by_id, get_reply_by_id
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -34,7 +34,12 @@ async def post_by_id(db: db_dependency, post_id: int):
 
 
 @router.put("/{post_id}", response_model=schemas.Post)
-async def post_put(db: db_dependency, post_id: int, updated_post: schemas.PostUpdate):
+async def post_put(
+    db: db_dependency,
+    post_id: int,
+    updated_post: schemas.PostUpdate,
+    current_user: schemas.AuthenticatedUser = Depends(owner_permission),
+):
     db_post = get_post_by_id(db, post_id)
 
     for key, value in updated_post.model_dump().items():
@@ -45,7 +50,11 @@ async def post_put(db: db_dependency, post_id: int, updated_post: schemas.PostUp
 
 
 @router.delete("/{post_id}")
-async def post_delete(db: db_dependency, post_id: int):
+async def post_delete(
+    db: db_dependency,
+    post_id: int,
+    current_user: schemas.AuthenticatedUser = Depends(owner_permission),
+):
     post_to_delete = get_post_by_id(db, post_id)
 
     delete_db_model(db, post_to_delete)
@@ -54,11 +63,18 @@ async def post_delete(db: db_dependency, post_id: int):
 
 # COMMENTS
 @router.post("/{post_id}/comment", response_model=schemas.Comment)
-async def comment_create(db: db_dependency, comment: schemas.CommentCreate):
-    get_post_by_id(db, comment.post_id)
-    get_user_by_id(db, comment.user_id)
+async def comment_create(
+    db: db_dependency,
+    post_id: int,
+    comment: schemas.CommentCreate,
+    current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
+):
+    get_post_by_id(db, post_id)
 
-    comment = models.Comment(**comment.model_dump())
+    comment = models.Comment(
+        **comment.model_dump(), post_id=post_id, user_id=current_user.id
+    )
+
     save_db_model(db, comment)
     return comment
 
@@ -70,8 +86,18 @@ async def comment_by_id(db: db_dependency, comment_id: int):
 
 @router.put("/comment/{comment_id}", response_model=schemas.Comment)
 async def comment_put(
-    db: db_dependency, comment_id: int, updated_comment: schemas.CommentUpdate
+    db: db_dependency,
+    comment_id: int,
+    updated_comment: schemas.CommentUpdate,
+    current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
 ):
+    check_ownership(
+        db=db,
+        user_id=current_user.id,
+        content_type=ContentTypeEnum.COMMENT,
+        content_id=comment_id,
+    )
+
     db_comment = get_comment_by_id(db, comment_id)
 
     for k, v in updated_comment.model_dump().items():
@@ -102,9 +128,51 @@ async def reply_create(
     data = {
         "body": reply.body,
         "comment_id": comment_id,
-        "from_user": current_user.id,
+        "user_id": current_user.id,
         "to_user": comment.user_id,
     }
 
     reply = models.Reply(**data)
+    save_db_model(db, reply)
     return reply
+
+
+@router.get("/reply/{reply_id}", response_model=schemas.Reply)
+async def reply_get(db: db_dependency, reply_id: int):
+    return get_reply_by_id(db, reply_id)
+
+
+@router.put("/reply/{reply_id}", response_model=schemas.Reply)
+async def reply_put(
+    db: db_dependency,
+    reply_id: int,
+    reply: schemas.ReplyUpdate,
+    current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
+):
+    check_ownership(
+        db=db,
+        user_id=current_user.id,
+        content_type=ContentTypeEnum.REPLY,
+        content_id=reply_id,
+    )
+
+    db_reply = get_reply_by_id(db, reply_id)
+
+    for k, v in reply:
+        setattr(db_reply, k, v)
+
+    update_db_model(db, db_reply)
+    return db_reply
+
+
+@router.delete("/reply/{reply_id}")
+async def reply_delete(
+    db: db_dependency,
+    reply_id: int,
+    current_user: schemas.AuthenticatedUser = Depends(delete_permission),
+):
+    # reply_to_delete = get_reply_by_id(db, reply_id)
+    # print(reply_to_delete)
+    # delete_db_model(db, reply_to_delete)
+    # return {"detail": f"Reply {reply_to_delete} deleted successfully"}
+    return "delete"

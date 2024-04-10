@@ -1,4 +1,3 @@
-from db import Base
 from sqlalchemy import (
     Boolean,
     Column,
@@ -10,6 +9,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
+from db import Base
 
 
 class BaseDataModel(Base):
@@ -114,5 +115,5 @@ class Reply(BaseDataModel):
 
     body = Column(String(1000))
     comment_id = Column(Integer, ForeignKey("comments.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
     to_user = Column(Integer, ForeignKey("users.id"), index=True)
-    from_user = Column(Integer, ForeignKey("users.id"), index=True)
