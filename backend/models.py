@@ -31,7 +31,13 @@ class User(BaseDataModel):
     is_active = Column(Boolean, default=False)
     is_owner = Column(Boolean, default=False)
 
-    profile = relationship("Profile", uselist=False, backref="users")
+    profile = relationship(
+        "Profile",
+        uselist=False,
+        backref="users",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
     posts = relationship(
         "Post",
         uselist=True,
@@ -57,8 +63,14 @@ class Profile(BaseDataModel):
 
     name = Column(String(25), index=True, nullable=True)
     last_name = Column(String(25), index=True, nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
-    avatar = relationship("ProfileAvatar", uselist=False, backref="profiles")
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    avatar = relationship(
+        "ProfileAvatar",
+        uselist=False,
+        backref="profiles",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class ProfileAvatar(BaseDataModel):
@@ -66,7 +78,9 @@ class ProfileAvatar(BaseDataModel):
 
     id = Column(Integer, primary_key=True)
 
-    profile_id = Column(Integer, ForeignKey("profiles.id"), index=True)
+    profile_id = Column(
+        Integer, ForeignKey("profiles.id", ondelete="CASCADE"), index=True
+    )
     avatar = Column(LargeBinary)
 
 
@@ -78,7 +92,7 @@ class Post(BaseDataModel):
 
     title = Column(String(200), index=True)
     body = Column(String)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
     comments = relationship(
         "Comment",
         uselist=True,
@@ -95,8 +109,8 @@ class Comment(BaseDataModel):
     id = Column(Integer, primary_key=True)
 
     body = Column(String(1000))
-    post_id = Column(Integer, ForeignKey("posts.id"), index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
 
     replies = relationship(
         "Reply",
@@ -114,6 +128,8 @@ class Reply(BaseDataModel):
     id = Column(Integer, primary_key=True)
 
     body = Column(String(1000))
-    comment_id = Column(Integer, ForeignKey("comments.id"), index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), index=True)
-    to_user = Column(Integer, ForeignKey("users.id"), index=True)
+    comment_id = Column(
+        Integer, ForeignKey("comments.id", ondelete="CASCADE"), index=True
+    )
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    to_user = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)

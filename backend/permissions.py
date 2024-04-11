@@ -50,18 +50,18 @@ def delete_permission(
     if context.comment_id:
         db_comment = (
             db.query(models.Comment)
-            .filter(models.Comment == context.comment_id)
+            .filter(models.Comment.id == context.comment_id)
             .first()
         )
-        if db_comment is not None and db_comment.user_id != auth_user.id:
-            raise not_owner_exception(ContentTypeEnum.COMMENT)
+        if db_comment and db_comment.user_id != auth_user.id:
+            raise not_owner_exception(ContentTypeEnum.COMMENT.value)
 
     if context.reply_id:
         db_reply = (
-            db.query(models.Reply).filter(models.Reply == context.reply_id).first()
+            db.query(models.Reply).filter(models.Reply.id == context.reply_id).first()
         )
 
-        if db_reply is not None and db_reply.user_id != auth_user.id:
-            raise not_owner_exception(ContentTypeEnum.REPLY)
+        if db_reply and db_reply.user_id != auth_user.id:
+            raise not_owner_exception(ContentTypeEnum.REPLY.value)
 
     return auth_user

@@ -108,7 +108,11 @@ async def comment_put(
 
 
 @router.delete("/comment/{comment_id}")
-async def comment_delete(db: db_dependency, comment_id: int):
+async def comment_delete(
+    db: db_dependency,
+    comment_id: int,
+    current_user: schemas.AuthenticatedUser = Depends(delete_permission),
+):
     comment_to_delete = get_comment_by_id(db, comment_id)
 
     delete_db_model(db, comment_to_delete)
@@ -171,8 +175,6 @@ async def reply_delete(
     reply_id: int,
     current_user: schemas.AuthenticatedUser = Depends(delete_permission),
 ):
-    # reply_to_delete = get_reply_by_id(db, reply_id)
-    # print(reply_to_delete)
-    # delete_db_model(db, reply_to_delete)
-    # return {"detail": f"Reply {reply_to_delete} deleted successfully"}
-    return "delete"
+    reply_to_delete = get_reply_by_id(db, reply_id)
+    delete_db_model(db, reply_to_delete)
+    return {"detail": f"Reply {reply_id} deleted successfully"}

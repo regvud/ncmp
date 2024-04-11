@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 
 import models
 import schemas
-from db import db_dependency, update_db_model
-from permissions import authenticated_permission
+from db import db_dependency, delete_db_model, update_db_model
+from permissions import authenticated_permission, owner_permission
 
 from .crud import get_profile, get_user_by_id, user_create
 
@@ -52,3 +52,14 @@ async def user_list(
 @router.get("/{user_id}", response_model=schemas.User)
 async def user_by_id(db: db_dependency, user_id: int):
     return get_user_by_id(db, user_id)
+
+
+@router.delete("/{user_id}")
+async def delete_user(
+    db: db_dependency,
+    user_id: int,
+    current_user: schemas.AuthenticatedUser = Depends(owner_permission),
+):
+    user_to_delete = get_user_by_id(db, user_id)
+    delete_db_model(db, user_to_delete)
+    return {"detail": f"Deleted user: {user_to_delete.email}"}
