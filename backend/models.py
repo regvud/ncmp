@@ -1,7 +1,9 @@
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
     DateTime,
+    Enum,
     ForeignKey,
     Integer,
     LargeBinary,
@@ -11,6 +13,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from db import Base
+from enums import ContentTypeEnum
 
 
 class BaseDataModel(Base):
@@ -133,3 +136,34 @@ class Reply(BaseDataModel):
     )
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
     to_user = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+
+
+class Like(BaseDataModel):
+    __tablename__ = "likes"
+
+    id = Column(Integer, primary_key=True)
+
+    content_id = Column(Integer, index=True, nullable=False)
+    content_type = Column(
+        Enum(ContentTypeEnum), index=True, nullable=False
+    )  # 'post', 'comment', or 'reply'
+
+    users_liked = relationship(
+        "UserLike",
+        uselist=True,
+        backref="likes",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    __table_args__ = (CheckConstraint("count >= 0", name="min_count_constraint"),)
+
+
+class UserLike(BaseDataModel):
+    __tablename__ = "user_like"
+
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    like_id = Column(Integer, ForeignKey("likes.id", ondelete="CASCADE"), index=True)

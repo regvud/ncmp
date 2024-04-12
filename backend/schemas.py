@@ -134,3 +134,35 @@ class Reply(ReplyCreate):
 
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+
+
+# LIKES
+class UserLikeCreate(BaseModel):
+    user_id: int
+    like_id: int
+
+
+class UserLike(UserLikeCreate):
+    id: int
+
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+
+class UserIds(BaseModel):
+    user_id: int
+
+
+class Like(BaseModel):
+    id: int
+
+    content_id: int
+    content_type: str
+    users_liked: list[UserIds] = []
+
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+
+class LikeCounter(Like):
+    count: int

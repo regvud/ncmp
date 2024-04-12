@@ -17,8 +17,8 @@ from exceptions import (
 )
 from users.crud import get_user_by_email
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-REFRESH_TOKEN_EXPIRE_MINUTES = 180
+ACCESS_TOKEN_EXPIRE_MINUTES = 500
+REFRESH_TOKEN_EXPIRE_MINUTES = 1000
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

@@ -54,7 +54,7 @@ def delete_permission(
             .first()
         )
         if db_comment and db_comment.user_id != auth_user.id:
-            raise not_owner_exception(ContentTypeEnum.COMMENT.value)
+            raise not_owner_exception(ContentTypeEnum.COMMENT)
 
     if context.reply_id:
         db_reply = (
@@ -62,6 +62,6 @@ def delete_permission(
         )
 
         if db_reply and db_reply.user_id != auth_user.id:
-            raise not_owner_exception(ContentTypeEnum.REPLY.value)
+            raise not_owner_exception(ContentTypeEnum.REPLY)
 
     return auth_user
