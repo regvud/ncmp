@@ -16,7 +16,8 @@ async def user_profile(
     db: db_dependency,
     current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
 ):
-    return get_profile(db, current_user.id)
+    profile = get_profile(db, current_user.id)
+    return profile
 
 
 @router.put("/profile", response_model=schemas.Profile)

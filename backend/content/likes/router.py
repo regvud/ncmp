@@ -3,11 +3,12 @@ from fastapi import APIRouter, Depends
 import schemas
 from content.crud import (
     get_like_counter_schema,
+    notification_create,
     user_like_create,
     user_like_delete,
 )
 from db import db_dependency
-from enums import ContentTypeEnum
+from enums import ContentTypeEnum, NotificationTypeEnum
 from permissions import authenticated_permission
 
 router = APIRouter(prefix="/likes", tags=["Likes"])
@@ -33,6 +34,11 @@ async def post_user_like(
     post_id: int,
     current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
 ):
+    notification = {
+        "type": NotificationTypeEnum.LIKE,
+        "message": f"liked post {post_id} from user {current_user.id}",
+    }
+    notification_create(db=db, notification=notification, user_id=current_user.id)
     return user_like_create(
         db=db,
         content_type=ContentTypeEnum.POST,

@@ -20,7 +20,8 @@ from users.crud import get_user_by_email
 ACCESS_TOKEN_EXPIRE_MINUTES = 500
 REFRESH_TOKEN_EXPIRE_MINUTES = 1000
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -28,6 +29,11 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 class Tokens(BaseModel):
     access: str
     refresh: str
+
+
+class SwaggerToken(BaseModel):
+    access_token: str
+    token_type: str
 
 
 class RefreshTokenModel(BaseModel):
@@ -63,6 +69,28 @@ def create_token(email: str, user_id: int, is_owner: bool, expire_delta: timedel
     return jwt.encode(encode, env.get("SECRET_KEY"), algorithm=env.get("ALGORITHM"))
 
 
+@router.post("/token", response_model=SwaggerToken)
+async def swagger_token(
+    user: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency
+):
+    user = authenticate_user(user.email, user.password, db)
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid user credentials, re-check email or password.",
+        )
+
+    access = create_token(
+        user.email,
+        user.id,
+        user.is_owner,
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+
+    return {"access_token": access, "token_type": "bearer"}
+
+
 @router.post("/login", response_model=Tokens)
 async def login(
     user: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency
@@ -88,7 +116,8 @@ async def login(
         timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES),
     )
 
-    return {"access": access, "refresh": refresh}
+    token_pair = Tokens(access=access, refresh=refresh)
+    return token_pair
 
 
 @router.post("/refresh")

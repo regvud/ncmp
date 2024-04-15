@@ -5,6 +5,7 @@ import schemas
 from db import db_dependency, delete_db_model, save_db_model
 from enums import ContentTypeEnum
 from exceptions import liked_exception, not_owner_exception, unliked_exception
+from users.crud import get_profile
 
 
 def check_ownership(
@@ -84,7 +85,7 @@ def get_user_like(db: db_dependency, user_id: int, like_id: int):
 def user_like_create(
     db: db_dependency,
     content_type: ContentTypeEnum,
-    content_id,
+    content_id: int,
     user_id: int,
 ):
     content_like = get_like_by_id(db, content_type, content_id)
@@ -125,18 +126,44 @@ def get_like_counter_schema(
     ).count()
 
     like_dict = like.__dict__
-    like_dict.update({"count": count})
-    like_dict.update({"users_liked": []})
 
-    users_liked: list = like_dict.get("users_liked")
+    users_liked_ids: set[int] = {user_like.user_id for user_like in like.users_liked}
 
-    users = like.users_liked.all()
+    like_dict.update({"users_liked": users_liked_ids})
 
-    for user in users:
-        users_liked.append({"user_id": user.user_id})
+    like_counter_schema = schemas.LikeCounter(**like_dict, count=count)
+    return like_counter_schema
 
-    like_counter_schema = schemas.LikeCounter(
-        **like_dict,
+
+# NOTIFICATIONS
+def notification_create(
+    db: db_dependency, notification: schemas.Notification, user_id: int
+):
+    profile = get_profile(db, user_id)
+    new_notification = models.Notification(**notification, profile_id=profile.id)
+
+    save_db_model(db, new_notification)
+    return new_notification
+
+
+def notification_delete(db: db_dependency, notification_id: int):
+    notification_to_delete = (
+        db.query(models.Notification)
+        .filter(models.Notification.id == notification_id)
+        .first()
+    )
+    delete_db_model(db, notification_to_delete)
+
+    return {"detail": f"Deleted notification {notification_id}"}
+
+
+def read_notifications(db: db_dependency, notif_ids: list[int]):
+    query = (
+        db.query(models.Notification)
+        .filter(models.Notification.id.in_(notif_ids))
+        .update({models.Notification.status: True})
     )
 
-    return like_counter_schema
+    db.commit()
+
+    return None

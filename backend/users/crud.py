@@ -39,7 +39,6 @@ def user_create(db: db_dependency, user: schemas.UserCreate):
 
 # PROFILE
 def get_profile(db: db_dependency, user_id: int):
-    print(user_id)
     db_profile = (
         db.query(models.Profile).filter(models.Profile.user_id == user_id).first()
     )

@@ -1,3 +1,5 @@
+from linecache import lazycache
+
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
@@ -13,7 +15,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from db import Base
-from enums import ContentTypeEnum
+from enums import ContentTypeEnum, NotificationTypeEnum
 
 
 class BaseDataModel(Base):
@@ -74,6 +76,14 @@ class Profile(BaseDataModel):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    notifications = relationship(
+        "Notification",
+        uselist=True,
+        backref="profiles",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="dynamic",
+    )
 
 
 class ProfileAvatar(BaseDataModel):
@@ -85,6 +95,19 @@ class ProfileAvatar(BaseDataModel):
         Integer, ForeignKey("profiles.id", ondelete="CASCADE"), index=True
     )
     avatar = Column(LargeBinary)
+
+
+class Notification(BaseDataModel):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True)
+
+    profile_id = Column(
+        Integer, ForeignKey("profiles.id", ondelete="CASCADE"), index=True
+    )
+    type = Column(Enum(NotificationTypeEnum), index=True, nullable=False)
+    message = Column(String(100))
+    status = Column(Boolean, nullable=False, default=False)
 
 
 # POST RELATED
@@ -152,7 +175,6 @@ class Like(BaseDataModel):
         "UserLike",
         uselist=True,
         backref="likes",
-        lazy="dynamic",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )

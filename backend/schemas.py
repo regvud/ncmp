@@ -32,6 +32,7 @@ class User(UserBase):
     updated_at: Optional[datetime]
 
 
+# PROFILE
 class ProfileBase(BaseModel):
     name: Optional[str] = None
     last_name: Optional[str] = None
@@ -46,6 +47,7 @@ class Profile(ProfileUpdate):
 
     user_id: int
     avatar: Optional["Avatar"] = None
+    notifications: list["Notification"] = []
 
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
@@ -61,6 +63,17 @@ class Avatar(AvatarBase):
 
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+
+
+class NotificationCreate(BaseModel):
+    profile_id: int
+    type: str
+    message: str
+    status: bool
+
+
+class Notification(NotificationCreate):
+    id: int
 
 
 # POST RELATED
@@ -149,20 +162,22 @@ class UserLike(UserLikeCreate):
     updated_at: Optional[datetime]
 
 
-class UserIds(BaseModel):
-    user_id: int
-
-
-class Like(BaseModel):
-    id: int
-
+class LikeBase(BaseModel):
     content_id: int
     content_type: str
-    users_liked: list[UserIds] = []
+
+
+class Like(LikeBase):
+    id: int
+
+    users_liked: list[UserLike] = []
 
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
 
-class LikeCounter(Like):
+class LikeCounter(LikeBase):
+    id: int
+
     count: int
+    users_liked: list[int] = []
