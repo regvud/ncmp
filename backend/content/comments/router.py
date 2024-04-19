@@ -2,9 +2,14 @@ from fastapi import APIRouter, Depends
 
 import models
 import schemas
-from content.crud import check_ownership, get_comment_by_id, get_post_by_id
+from content.crud import (
+    check_ownership,
+    create_related_like_notification_models,
+    get_comment_by_id,
+    get_post_by_id,
+)
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
-from enums import ContentTypeEnum
+from enums import ContentTypeEnum, NotificationTypeEnum
 from permissions import authenticated_permission, delete_permission
 
 router = APIRouter(prefix="/comments", tags=["Comments"])
@@ -17,15 +22,21 @@ async def comment_create(
     comment: schemas.CommentCreate,
     current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
 ):
-    get_post_by_id(db, post_id)
+    post = get_post_by_id(db, post_id)
 
     comment = models.Comment(
         **comment.model_dump(), post_id=post_id, user_id=current_user.id
     )
     save_db_model(db, comment)
 
-    like = models.Like(content_id=comment.id, content_type=ContentTypeEnum.COMMENT)
-    save_db_model(db, like)
+    create_related_like_notification_models(
+        db=db,
+        content_type=ContentTypeEnum.COMMENT,
+        notification_type=NotificationTypeEnum.COMMENT,
+        content_id=comment.id,
+        current_user_id=current_user.id,
+        user_to_notify_id=post.user_id,
+    )
     return comment
 
 

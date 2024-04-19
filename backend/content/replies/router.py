@@ -2,9 +2,14 @@ from fastapi import APIRouter, Depends
 
 import models
 import schemas
-from content.crud import check_ownership, get_comment_by_id, get_reply_by_id
+from content.crud import (
+    check_ownership,
+    create_related_like_notification_models,
+    get_comment_by_id,
+    get_reply_by_id,
+)
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
-from enums import ContentTypeEnum
+from enums import ContentTypeEnum, NotificationTypeEnum
 from permissions import authenticated_permission, delete_permission
 
 router = APIRouter(prefix="/replies", tags=["Replies"])
@@ -29,8 +34,15 @@ async def reply_create(
     reply = models.Reply(**data)
     save_db_model(db, reply)
 
-    like = models.Like(content_id=reply.id, content_type=ContentTypeEnum.REPLY)
-    save_db_model(db, like)
+    create_related_like_notification_models(
+        db=db,
+        content_type=ContentTypeEnum.REPLY,
+        notification_type=NotificationTypeEnum.REPLY,
+        content_id=reply.id,
+        current_user_id=current_user.id,
+        user_to_notify_id=reply.to_user,
+    )
+
     return reply
 
 

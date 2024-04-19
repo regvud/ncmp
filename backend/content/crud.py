@@ -1,11 +1,10 @@
 from fastapi import HTTPException
 
 import models
-import schemas
 from db import db_dependency, delete_db_model, save_db_model
-from enums import ContentTypeEnum
-from exceptions import liked_exception, not_owner_exception, unliked_exception
-from users.crud import get_profile
+from enums import ContentTypeEnum, NotificationTypeEnum
+from exceptions import not_owner_exception
+from users.crud import get_user_by_id
 
 
 def check_ownership(
@@ -56,96 +55,7 @@ def get_reply_by_id(db: db_dependency, reply_id: int):
     return db_reply
 
 
-# LIKES
-def get_like_by_id(db: db_dependency, content_type: ContentTypeEnum, content_id: int):
-    db_like = (
-        db.query(models.Like)
-        .filter(models.Like.content_id == content_id)
-        .filter(models.Like.content_type == content_type)
-        .first()
-    )
-
-    if not db_like:
-        raise HTTPException(status_code=404, detail="Like not found")
-
-    return db_like
-
-
-def get_user_like(db: db_dependency, user_id: int, like_id: int):
-    user_like = (
-        db.query(models.UserLike)
-        .filter(models.UserLike.user_id == user_id)
-        .filter(models.UserLike.like_id == like_id)
-        .first()
-    )
-
-    return user_like
-
-
-def user_like_create(
-    db: db_dependency,
-    content_type: ContentTypeEnum,
-    content_id: int,
-    user_id: int,
-):
-    content_like = get_like_by_id(db, content_type, content_id)
-
-    db_user_like = get_user_like(db, user_id, content_like.id)
-
-    if db_user_like:
-        raise liked_exception(content_type)
-
-    user_like = models.UserLike(like_id=content_like.id, user_id=user_id)
-    save_db_model(db, user_like)
-
-    return content_like
-
-
-def user_like_delete(
-    db: db_dependency, content_type: ContentTypeEnum, content_id: int, user_id: int
-):
-    db_like = get_like_by_id(db, content_type, content_id)
-
-    user_like_to_delete = get_user_like(db, user_id, db_like.id)
-    if not user_like_to_delete:
-        raise unliked_exception(content_type)
-
-    delete_db_model(db, user_like_to_delete)
-    return {"detail": f"Deleted like {user_like_to_delete.id}"}
-
-
-def get_like_counter_schema(
-    db: db_dependency, content_type: ContentTypeEnum, content_id: int, user_id: int
-):
-    like = get_like_by_id(db, content_type, content_id)
-
-    count = (
-        db.query(models.UserLike)
-        .filter(models.UserLike.user_id == user_id)
-        .filter(models.UserLike.like_id == like.id)
-    ).count()
-
-    like_dict = like.__dict__
-
-    users_liked_ids: set[int] = {user_like.user_id for user_like in like.users_liked}
-
-    like_dict.update({"users_liked": users_liked_ids})
-
-    like_counter_schema = schemas.LikeCounter(**like_dict, count=count)
-    return like_counter_schema
-
-
 # NOTIFICATIONS
-def notification_create(
-    db: db_dependency, notification: schemas.Notification, user_id: int
-):
-    profile = get_profile(db, user_id)
-    new_notification = models.Notification(**notification, profile_id=profile.id)
-
-    save_db_model(db, new_notification)
-    return new_notification
-
-
 def notification_delete(db: db_dependency, notification_id: int):
     notification_to_delete = (
         db.query(models.Notification)
@@ -167,3 +77,38 @@ def read_notifications(db: db_dependency, notif_ids: list[int]):
     db.commit()
 
     return None
+
+
+def message_notification(
+    notification_type: NotificationTypeEnum, from_user: models.User
+):
+    return f"You have new {notification_type} from user {from_user.email}, id: {from_user.id}"
+
+
+def create_related_like_notification_models(
+    db: db_dependency,
+    content_type: ContentTypeEnum,
+    notification_type: NotificationTypeEnum,
+    content_id: int,
+    current_user_id: int,
+    user_to_notify_id: int,
+):
+    """
+    attaches likes_model to created object,
+    attaches notif_model only if current_user != notify_user
+    """
+
+    notify_user = get_user_by_id(db, user_to_notify_id)
+    current_user = get_user_by_id(db, current_user_id)
+
+    like = models.Like(content_id=content_id, content_type=content_type)
+
+    if current_user_id != user_to_notify_id:
+        notification = models.Notification(
+            profile_id=notify_user.profile.id,
+            type=notification_type,
+            message=message_notification(notification_type.value, current_user),
+        )
+        save_db_model(db, notification)
+
+    save_db_model(db, like)
