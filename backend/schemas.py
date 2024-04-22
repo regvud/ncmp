@@ -55,7 +55,11 @@ class Profile(ProfileUpdate):
 
 class AvatarBase(BaseModel):
     profile_id: int
-    avatar: bytes | None
+    avatar: bytes
+
+
+class AvatarCreate(AvatarBase):
+    pass
 
 
 class Avatar(AvatarBase):
@@ -74,6 +78,9 @@ class NotificationCreate(BaseModel):
 
 class Notification(NotificationCreate):
     id: int
+
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
 
 # POST RELATED

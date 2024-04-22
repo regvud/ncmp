@@ -6,7 +6,6 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Integer,
-    LargeBinary,
     String,
 )
 from sqlalchemy.orm import relationship
@@ -92,7 +91,7 @@ class ProfileAvatar(BaseDataModel):
     profile_id = Column(
         Integer, ForeignKey("profiles.id", ondelete="CASCADE"), index=True
     )
-    avatar = Column(LargeBinary)
+    avatar = Column(String)
 
 
 class Notification(BaseDataModel):

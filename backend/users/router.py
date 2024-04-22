@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile
 
 import models
 import schemas
 from db import db_dependency, delete_db_model, update_db_model
 from permissions import authenticated_permission, owner_permission
 
-from .crud import get_profile, get_user_by_id, user_create
+from .crud import get_profile, get_user_by_id, upload_avatar, user_create
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -33,6 +33,16 @@ async def profile_update(
 
     update_db_model(db, db_profile)
     return db_profile
+
+
+@router.post("/profile/avatar", response_model=schemas.Avatar)
+async def profile_change_avatar(
+    db: db_dependency,
+    file: UploadFile,
+    current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
+):
+    created_avatar = upload_avatar(db=db, upload_file=file, user_id=current_user.id)
+    return created_avatar
 
 
 # USER

@@ -1,4 +1,6 @@
-from fastapi import HTTPException
+from uuid import uuid1
+
+from fastapi import HTTPException, UploadFile
 
 import models
 import schemas
@@ -46,3 +48,27 @@ def get_profile(db: db_dependency, user_id: int):
     if not db_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
     return db_profile
+
+
+def upload_avatar(
+    db: db_dependency,
+    user_id: int,
+    upload_file: UploadFile,
+):
+    uu_filename = f"{uuid1()}:{upload_file.filename.replace(' ', '').strip()}"
+
+    path_to_file = f"images/avatars/{uu_filename}"
+
+    with open(path_to_file, "+wb") as file:
+        file.write(upload_file.file.read())
+
+    profile_id = get_profile(db, user_id).id
+
+    db.query(models.ProfileAvatar).filter(
+        models.ProfileAvatar.profile_id == profile_id
+    ).delete()
+
+    new_avatar = models.ProfileAvatar(profile_id=profile_id, avatar=f"/{path_to_file}")
+    save_db_model(db, new_avatar)
+
+    return new_avatar

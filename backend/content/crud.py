@@ -4,7 +4,7 @@ import models
 from db import db_dependency, delete_db_model, save_db_model
 from enums import ContentTypeEnum, NotificationTypeEnum
 from exceptions import not_owner_exception
-from users.crud import get_user_by_id
+from users.crud import get_profile, get_user_by_id
 
 
 def check_ownership(
@@ -56,6 +56,18 @@ def get_reply_by_id(db: db_dependency, reply_id: int):
 
 
 # NOTIFICATIONS
+def get_user_notifications(db: db_dependency, user_id: int):
+    user_profile_id = get_profile(db, user_id).id
+
+    user_notifications = (
+        db.query(models.Notification)
+        .filter(models.Notification.profile_id == user_profile_id)
+        .all()
+    )
+
+    return user_notifications
+
+
 def notification_delete(db: db_dependency, notification_id: int):
     notification_to_delete = (
         db.query(models.Notification)
@@ -67,16 +79,23 @@ def notification_delete(db: db_dependency, notification_id: int):
     return {"detail": f"Deleted notification {notification_id}"}
 
 
-def read_notifications(db: db_dependency, notif_ids: list[int]):
+def read_notifications(db: db_dependency, user_id: int) -> bool:
+    user_profile_id = get_profile(db, user_id).id
+
     query = (
         db.query(models.Notification)
-        .filter(models.Notification.id.in_(notif_ids))
-        .update({models.Notification.status: True})
+        .filter(models.Notification.profile_id == user_profile_id)
+        .filter(models.Notification.status.is_(False))
     )
+
+    if query.all() == []:
+        return False
+
+    query.update({models.Notification.status: True})
 
     db.commit()
 
-    return None
+    return True
 
 
 def message_notification(
