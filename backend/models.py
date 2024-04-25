@@ -124,6 +124,22 @@ class Post(BaseDataModel):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    images = relationship(
+        "PostImage",
+        uselist=True,
+        backref="posts",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+
+class PostImage(BaseDataModel):
+    __tablename__ = "post_images"
+
+    id = Column(Integer, primary_key=True)
+
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), index=True)
+    path = Column(String)
 
 
 class Comment(BaseDataModel):

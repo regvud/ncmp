@@ -87,6 +87,7 @@ class Notification(NotificationCreate):
 class PostBase(BaseModel):
     title: str
     body: str
+    images: list["PostImageSchema"] = []
 
 
 class PostUpdate(PostBase):
@@ -99,12 +100,23 @@ class PostCreate(PostBase):
 
 class Post(PostCreate):
     id: int
+
     user_id: int
     comments: list["Comment"] = []
 
 
 class PostNoComments(PostCreate):
     id: int
+
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+
+class PostImageSchema(BaseModel):
+    id: int
+
+    post_id: int
+    path: str
 
     created_at: Optional[datetime]
     updated_at: Optional[datetime]

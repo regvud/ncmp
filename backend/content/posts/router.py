@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile
 
 import models
 import schemas
 from content.crud import (
     get_post_by_id,
+    upload_post_images,
 )
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
 from enums import ContentTypeEnum
@@ -63,3 +64,11 @@ async def post_delete(
 
     delete_db_model(db, post_to_delete)
     return {"detail": f"Post {post_id} deleted successfully"}
+
+
+@router.post("/{post_id}/images", response_model=list[schemas.PostImageSchema])
+async def post_add_images(db: db_dependency, images: list[UploadFile], post_id: int):
+    upload_post_images(db, post_id, images)
+    post_images = db.query(models.PostImage).filter(models.PostImage.post_id == post_id)
+
+    return [image.__dict__ for image in post_images]

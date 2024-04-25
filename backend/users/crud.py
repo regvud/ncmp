@@ -4,7 +4,7 @@ from fastapi import HTTPException, UploadFile
 
 import models
 import schemas
-from cross_related import pwd_context
+from cross_related import pwd_context, uuid_creator, write_image_file
 from db import db_dependency, save_db_model
 
 
@@ -55,12 +55,11 @@ def upload_avatar(
     user_id: int,
     upload_file: UploadFile,
 ):
-    uu_filename = f"{uuid1()}:{upload_file.filename.replace(' ', '').strip()}"
+    uu_filename = uuid_creator(upload_file.filename)
 
     path_to_file = f"images/avatars/{uu_filename}"
 
-    with open(path_to_file, "+wb") as file:
-        file.write(upload_file.file.read())
+    write_image_file(upload_file, path_to_file)
 
     profile_id = get_profile(db, user_id).id
 

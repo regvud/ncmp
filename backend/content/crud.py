@@ -1,6 +1,7 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 
 import models
+from cross_related import uuid_creator, write_image_file
 from db import db_dependency, delete_db_model, save_db_model
 from enums import ContentTypeEnum, NotificationTypeEnum
 from exceptions import not_owner_exception
@@ -33,6 +34,17 @@ def get_post_by_id(db: db_dependency, post_id: int):
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
     return db_post
+
+
+def upload_post_images(db: db_dependency, post_id: int, image_files: list[UploadFile]):
+    for image_file in image_files:
+        uu_filename = uuid_creator(image_file.filename)
+        path_to_file = f"images/posts/{uu_filename}"
+
+        write_image_file(image_file, path_to_file)
+
+        new_post_image = models.PostImage(post_id=post_id, path=path_to_file)
+        save_db_model(db, new_post_image)
 
 
 # COMMENTS

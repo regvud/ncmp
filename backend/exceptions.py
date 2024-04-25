@@ -31,3 +31,10 @@ def not_owner_exception(content_type: ContentTypeEnum):
         status_code=status.HTTP_403_FORBIDDEN,
         detail=f"User is not owner of this {content_type.value}",
     )
+
+
+def write_file_exception(err_msg: str):
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=f"Error while writing file: {err_msg}",
+    )
