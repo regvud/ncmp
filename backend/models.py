@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    DECIMAL,
     Boolean,
     CheckConstraint,
     Column,
@@ -12,7 +13,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from db import Base
-from enums import ContentTypeEnum, NotificationTypeEnum
+from enums import ContentTypeEnum, NotificationTypeEnum, ProductTypeEnum
 
 
 class BaseDataModel(Base):
@@ -202,3 +203,18 @@ class UserLike(BaseDataModel):
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
     like_id = Column(Integer, ForeignKey("likes.id", ondelete="CASCADE"), index=True)
+
+
+# PRODUCTS
+class Product(BaseDataModel):
+    __tablename__ = "products"
+
+    id = Column(Integer, primary_key=True)
+
+    name = Column(String(50), nullable=False, unique=True, index=True)
+    type = Column(Enum(ProductTypeEnum), nullable=False, index=True)
+    price = Column(DECIMAL(precision=7, scale=2), default=0, index=True)
+    height = Column(Integer, nullable=True)
+    width = Column(Integer, nullable=True)
+    capacity = Column(DECIMAL(precision=3, scale=1), nullable=True)
+    description = Column(String(255))

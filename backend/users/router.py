@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, UploadFile
 
 import models
 import schemas
+from cross_related import delete_related_images
 from db import db_dependency, delete_db_model, update_db_model
+from enums import ImageTypeEnum
 from permissions import authenticated_permission, owner_permission
 
 from .crud import get_profile, get_user_by_id, upload_avatar, user_create
@@ -72,5 +74,7 @@ async def delete_user(
     current_user: schemas.AuthenticatedUser = Depends(owner_permission),
 ):
     user_to_delete = get_user_by_id(db, user_id)
+
+    delete_related_images(ImageTypeEnum.AVATAR, user_id)
     delete_db_model(db, user_to_delete)
     return {"detail": f"Deleted user: {user_to_delete.email}"}

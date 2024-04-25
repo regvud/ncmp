@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -200,3 +201,21 @@ class LikeCounter(LikeBase):
 
     count: int
     users_liked: list[int] = []
+
+
+# PRODUCTS
+class ProductBaseSchema(BaseModel):
+    name: str
+    type: str
+    price: Optional[Decimal] = None
+    height: Optional[int] = None
+    width: Optional[int] = None
+    capacity: Optional[Decimal] = None
+    description: Optional[str] = None
+
+
+class ProductSchema(ProductBaseSchema):
+    id: int
+
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]

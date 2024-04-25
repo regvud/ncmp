@@ -7,8 +7,13 @@ TOKEN_EXPIRED_EXCEPTION = HTTPException(
     detail="Token is expired",
     headers={"WWW-Authenticate": "Bearer"},
 )
+
 UNAUTHORIZED_EXCEPTION = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized user"
+)
+
+FILE_NOT_FOUND_EXCEPTION = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
 )
 
 

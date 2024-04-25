@@ -6,8 +6,9 @@ from content.crud import (
     get_post_by_id,
     upload_post_images,
 )
+from cross_related import delete_related_images
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
-from enums import ContentTypeEnum
+from enums import ContentTypeEnum, ImageTypeEnum
 from permissions import owner_permission
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
@@ -62,6 +63,7 @@ async def post_delete(
 ):
     post_to_delete = get_post_by_id(db, post_id)
 
+    delete_related_images(ImageTypeEnum.POST, post_id)
     delete_db_model(db, post_to_delete)
     return {"detail": f"Post {post_id} deleted successfully"}
 

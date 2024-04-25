@@ -38,12 +38,12 @@ def get_post_by_id(db: db_dependency, post_id: int):
 
 def upload_post_images(db: db_dependency, post_id: int, image_files: list[UploadFile]):
     for image_file in image_files:
-        uu_filename = uuid_creator(image_file.filename)
+        uu_filename = uuid_creator(image_file.filename, post_id)
         path_to_file = f"images/posts/{uu_filename}"
 
         write_image_file(image_file, path_to_file)
 
-        new_post_image = models.PostImage(post_id=post_id, path=path_to_file)
+        new_post_image = models.PostImage(post_id=post_id, path=f"/{path_to_file}")
         save_db_model(db, new_post_image)
 
 
