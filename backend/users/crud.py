@@ -37,6 +37,20 @@ def user_create(db: db_dependency, user: schemas.UserCreate):
     return new_user
 
 
+def oauth_user_create(db: db_dependency, user_info: schemas.OauthUserSchema):
+    user_data = {
+        "email": user_info.email,
+        "password": pwd_context.hash(f"{user_info.sub}:{user_info.email}"),
+        "is_active": True,
+    }
+
+    profile = models.Profile()
+    new_user = models.User(**user_data, profile=profile)
+
+    save_db_model(db, new_user)
+    return new_user
+
+
 # PROFILE
 def get_profile(db: db_dependency, user_id: int):
     db_profile = (

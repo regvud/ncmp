@@ -33,6 +33,41 @@ class User(UserBase):
     updated_at: Optional[datetime]
 
 
+# {
+#     "iss": "https://accounts.google.com",
+#     "azp": "39907774347-2h86j4av2hm8qr02ge6pmg2q8dsm8s9l.apps.googleusercontent.com",
+#     "aud": "39907774347-2h86j4av2hm8qr02ge6pmg2q8dsm8s9l.apps.googleusercontent.com",
+#     "sub": "113109452256060544367",
+#     "email": "silveron.regvud@gmail.com",
+#     "email_verified": True,
+#     "at_hash": "9bWcsBbcKTzY0U6qudG0WA",
+#     "nonce": "4C0BQuyGC4OPcrALQd5k",
+#     "name": "Vanya Regvud",
+#     "picture": "https://lh3.googleusercontent.com/a/ACg8ocLRQoIS9MlktDRo9_h217W0srbHafaOqcNuv9hgio6RajdWFaol=s96-c",
+#     "given_name": "Vanya",
+#     "family_name": "Regvud",
+#     "iat": 1714642450,
+#     "exp": 1714646050,
+# }
+
+
+class OauthUserSchema(BaseModel):
+    iss: str
+    azp: str
+    aud: str
+    sub: str
+    email: str
+    email_verified: bool
+    at_hash: str
+    nonce: str
+    name: str
+    picture: str
+    given_name: Optional[str] = None
+    family_name: Optional[str] = None
+    iat: int
+    exp: int
+
+
 # PROFILE
 class ProfileBase(BaseModel):
     name: Optional[str] = None

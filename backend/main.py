@@ -2,9 +2,11 @@ import pathlib
 
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import FileResponse
+from starlette.middleware.sessions import SessionMiddleware
 
 import models
 from auth import router as auth_router
+from config import AVATARS_PATH, POST_IMAGES_PATH, SESSION_MIDDLEWARE_SECRET
 from content.comments.router import router as comment_router
 from content.likes.router import router as like_router
 from content.notifications.router import router as notif_router
@@ -15,14 +17,12 @@ from exceptions import FILE_NOT_FOUND_EXCEPTION
 from products.router import router as product_router
 from users.router import router as user_router
 
-AVATARS_PATH = "images/avatars"
-POST_IMAGES_PATH = "images/posts"
-
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 app_router = APIRouter(tags=["View Images"])
+app.add_middleware(SessionMiddleware, secret_key=SESSION_MIDDLEWARE_SECRET)
 
 
 @app_router.get("/images/avatars/{file_name}")

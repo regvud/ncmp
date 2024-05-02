@@ -1,14 +1,19 @@
 import os
+from os import environ as env
 from typing import Optional
 from uuid import uuid1
 
+from dotenv import load_dotenv
 from fastapi import UploadFile
 from passlib.context import CryptContext
 
 from enums import ImageTypeEnum
 from exceptions import write_file_exception
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+load_dotenv()
+
+
+pwd_context = CryptContext(schemes=[env.get("PWD_SCHEMA")], deprecated="auto")
 
 
 def uuid_creator(file_name: str, prefix: Optional[str]):
