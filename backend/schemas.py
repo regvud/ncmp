@@ -140,6 +140,9 @@ class Post(PostCreate):
     user_id: int
     comments: list["Comment"] = []
 
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
 
 class PostNoComments(PostCreate):
     id: int

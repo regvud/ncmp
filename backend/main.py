@@ -16,6 +16,7 @@ from db import engine
 from exceptions import FILE_NOT_FOUND_EXCEPTION
 from products.router import router as product_router
 from users.router import router as user_router
+from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -23,6 +24,13 @@ app = FastAPI()
 
 app_router = APIRouter(tags=["View Images"])
 app.add_middleware(SessionMiddleware, secret_key=SESSION_MIDDLEWARE_SECRET)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app_router.get("/images/avatars/{file_name}")
