@@ -67,7 +67,7 @@ def upload_avatar(
     user_id: int,
     upload_file: UploadFile,
 ):
-    uu_filename = uuid_creator(upload_file.filename, user_id)
+    uu_filename = uuid_creator(upload_file.filename, str(user_id))
 
     path_to_file = f"images/avatars/{uu_filename}"
 

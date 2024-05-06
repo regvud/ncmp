@@ -113,7 +113,7 @@ def read_notifications(db: db_dependency, user_id: int) -> bool:
 def message_notification(
     notification_type: NotificationTypeEnum, from_user: models.User
 ):
-    return f"You have new {notification_type} from user {from_user.email}, id: {from_user.id}"
+    return f"You have new {notification_type} from user {from_user.email}"
 
 
 def create_related_like_notification_models(
