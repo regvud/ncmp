@@ -17,12 +17,18 @@ export type CommentType = {
   updated_at: string | null;
 };
 
+export type PostImage = {
+  id: number;
+  post_id: number;
+  path: string;
+};
+
 export type PostType = {
   id: number;
   user_id: number;
   title: string;
   body: string;
-  images: string[];
+  images: PostImage[] | [];
   comments: CommentType[] | [];
   created_at: string | null;
   updated_at: string | null;
