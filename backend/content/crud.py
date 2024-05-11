@@ -28,7 +28,7 @@ def check_ownership(
 
 
 # POSTS
-def get_post_by_id(db: db_dependency, post_id: int):
+def get_post_by_id(db: db_dependency, post_id: int) -> models.Post:
     db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
 
     if not db_post:
@@ -45,6 +45,18 @@ def upload_post_images(db: db_dependency, post_id: int, image_files: list[Upload
 
         new_post_image = models.PostImage(post_id=post_id, path=f"/{path_to_file}")
         save_db_model(db, new_post_image)
+
+
+def post_handle_comment_count(db: db_dependency, post_id: int, action: bool):
+    post = get_post_by_id(db, post_id)
+
+    if action:
+        post.comments_count += 1
+    else:
+        post.comments_count -= 1
+
+    db.commit()
+    db.refresh(post)
 
 
 # COMMENTS

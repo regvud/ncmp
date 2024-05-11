@@ -36,7 +36,9 @@ async def posts(db: db_dependency):
 
 @router.get("/{post_id}", response_model=schemas.Post)
 async def post_by_id(db: db_dependency, post_id: int):
-    return get_post_by_id(db, post_id)
+    post = get_post_by_id(db, post_id)
+    print(post)
+    return post
 
 
 @router.put("/{post_id}", response_model=schemas.Post)

@@ -8,6 +8,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    event,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -117,6 +118,7 @@ class Post(BaseDataModel):
     title = Column(String(200), index=True)
     body = Column(String)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    comments_count = Column(Integer, nullable=False, default=0)
     comments = relationship(
         "Comment",
         uselist=True,
@@ -193,7 +195,7 @@ class Like(BaseDataModel):
         passive_deletes=True,
     )
 
-    __table_args__ = (CheckConstraint("count >= 0", name="min_count_constraint"),)
+    # __table_args__ = (CheckConstraint("count >= 0", name="min_count_constraint"),)
 
 
 class UserLike(BaseDataModel):
