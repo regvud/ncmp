@@ -7,7 +7,7 @@ from db import db_dependency, save_db_model
 
 
 # USER
-def get_user_by_email(db: db_dependency, email: str):
+def get_user_by_email(db: db_dependency, email: str) -> models.User:
     db_user = db.query(models.User).filter(models.User.email == email).first()
     return db_user
 

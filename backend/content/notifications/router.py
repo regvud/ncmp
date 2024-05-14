@@ -24,7 +24,9 @@ async def auth_user_read_notifications(
     readed_status = read_notifications(db, current_user.id)
 
     return {
-        "detail": f"readed notifications of user {current_user.email}"
-        if readed_status
-        else "no unreaded notifications"
+        "detail": (
+            f"readed notifications of user {current_user.email}"
+            if readed_status
+            else "no unreaded notifications"
+        )
     }

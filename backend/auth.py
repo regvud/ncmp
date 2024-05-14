@@ -6,17 +6,13 @@ from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from pydantic import BaseModel
 
-import models
-import schemas
 from config import CLIENT_ID, CLIENT_SECRET
 from cross_related import pwd_context
 from db import db_dependency
-from exceptions import (
-    TOKEN_EXPIRED_EXCEPTION,
-    UNAUTHORIZED_EXCEPTION,
-)
+from exceptions import TOKEN_EXPIRED_EXCEPTION, UNAUTHORIZED_EXCEPTION
+import models
+import schemas
 from users.crud import get_user_by_email, oauth_user_create
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 500
@@ -38,20 +34,6 @@ oauth.register(
         "redirect_url": "http://localhost:8000/auth",
     },
 )
-
-
-class Tokens(BaseModel):
-    access: str
-    refresh: str
-
-
-class SwaggerToken(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class RefreshTokenModel(BaseModel):
-    refresh_token: str
 
 
 def decoder(token: str):
@@ -96,32 +78,32 @@ def generate_access_refresh_tokens(user: models.User):
         **user_data,
         expire_delta=timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES),
     )
-    return Tokens(access=access, refresh=refresh)
+    return schemas.Tokens(access=access, refresh=refresh)
 
 
-@router.post("/token", response_model=SwaggerToken)
+@router.post("/token", response_model=schemas.SwaggerToken)
 async def swagger_token(
     user: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency
 ):
-    user = authenticate_user(user.email, user.password, db)
+    authenticated_user = authenticate_user(user.username, user.password, db)
 
     access = create_token(
-        user.email,
-        user.id,
-        user.is_owner,
-        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        authenticated_user.email,
+        authenticated_user.id,
+        authenticated_user.is_owner,
+        timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES,
+        ),
     )
+    swagger_token = {"access_token": access, "token_type": "Bearer"}
+    return swagger_token
 
-    return {"access_token": access, "token_type": "bearer"}
 
+@router.post("/login", response_model=schemas.Tokens)
+async def login(user: schemas.UserAuthSchema, db: db_dependency):
+    authenticated_user = authenticate_user(user.email, user.password, db)
 
-@router.post("/login", response_model=Tokens)
-async def login(
-    user: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency
-):
-    user = authenticate_user(user.username, user.password, db)
-
-    token_pair = generate_access_refresh_tokens(user)
+    token_pair = generate_access_refresh_tokens(authenticated_user)
     return token_pair
 
 
@@ -154,7 +136,7 @@ async def google_auth(db: db_dependency, request: Request):
 
 
 @router.post("/refresh")
-async def refresh_tokens(db: db_dependency, token: RefreshTokenModel):
+async def refresh_tokens(db: db_dependency, token: schemas.RefreshTokenModel):
     payload = decoder(token.refresh_token)
     user = get_user_by_email(db, payload.get("email"))
 

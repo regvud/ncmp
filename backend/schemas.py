@@ -10,12 +10,6 @@ class UserBase(BaseModel):
     email: str
 
 
-class AuthenticatedUser(UserBase):
-    id: int
-    exp: float
-    is_owner: bool
-
-
 class UserCreate(UserBase):
     password: str
     is_owner: Optional[bool] = False
@@ -33,22 +27,30 @@ class User(UserBase):
     updated_at: Optional[datetime]
 
 
-# {
-#     "iss": "https://accounts.google.com",
-#     "azp": "39907774347-2h86j4av2hm8qr02ge6pmg2q8dsm8s9l.apps.googleusercontent.com",
-#     "aud": "39907774347-2h86j4av2hm8qr02ge6pmg2q8dsm8s9l.apps.googleusercontent.com",
-#     "sub": "113109452256060544367",
-#     "email": "silveron.regvud@gmail.com",
-#     "email_verified": True,
-#     "at_hash": "9bWcsBbcKTzY0U6qudG0WA",
-#     "nonce": "4C0BQuyGC4OPcrALQd5k",
-#     "name": "Vanya Regvud",
-#     "picture": "https://lh3.googleusercontent.com/a/ACg8ocLRQoIS9MlktDRo9_h217W0srbHafaOqcNuv9hgio6RajdWFaol=s96-c",
-#     "given_name": "Vanya",
-#     "family_name": "Regvud",
-#     "iat": 1714642450,
-#     "exp": 1714646050,
-# }
+# AUTH
+class Tokens(BaseModel):
+    access: str
+    refresh: str
+
+
+class SwaggerToken(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class RefreshTokenModel(BaseModel):
+    refresh_token: str
+
+
+# AUTH USER
+class AuthenticatedUser(UserBase):
+    id: int
+    exp: float
+    is_owner: bool
+
+
+class UserAuthSchema(UserBase):
+    password: str
 
 
 class OauthUserSchema(BaseModel):
