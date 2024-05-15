@@ -1,42 +1,68 @@
-import { useEffect, useRef } from "react";
-import "./ModalImage.css";
+import { useRef, useState } from "react";
+import PrismaZoom from "react-prismazoom";
 
 interface ModalImageProps {
   imagePath: string;
-  toggler: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function ModalImage({ imagePath, toggler }: ModalImageProps) {
+export function ModalImage({ imagePath }: ModalImageProps) {
   const imageRef = useRef<HTMLImageElement>(null);
 
-  function cleanPrevModal() {
-    const prevModal = document.getElementById("modal-window");
+  const [togglePopup, setTogglePopup] = useState(false);
+  const divTabIndex = useRef<number | undefined>(0);
 
-    if (prevModal) {
-      prevModal.remove();
+  const imageClass = togglePopup
+    ? "object-contain w-[80%] h-[80%]"
+    : "object-contain w-[60%] h-[70%]";
+
+  const modalWindowClass = togglePopup
+    ? "h-screen w-screen bg-black bg-opacity-80 fixed top-1/2 left-1/2 -transform -translate-x-1/2 -translate-y-1/2 focus:outline-none"
+    : "modal-window";
+
+  function openImage() {
+    setTogglePopup(true);
+    divTabIndex.current = 0;
+  }
+
+  function closeImage() {
+    setTogglePopup(false);
+    divTabIndex.current = undefined;
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      closeImage();
     }
   }
 
-  useEffect(() => {
-    imageRef.current?.focus();
-    cleanPrevModal();
-  }, []);
-
   return (
-    <div id="modal-window">
-      <img
-        className="object-contain w-[90%] h-[90%] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-        src={imagePath}
-        alt="postImage"
-        ref={imageRef}
-        onClick={() => toggler(false)}
-        onKeyDown={(e: React.KeyboardEvent<HTMLImageElement>) => {
-          if (e.key === "Escape") {
-            toggler(false);
-          }
-        }}
-        tabIndex={0} // Make the image focusable
-      />
+    <div
+      className={modalWindowClass}
+      onKeyDown={handleKeyDown}
+      tabIndex={divTabIndex.current}
+    >
+      {togglePopup ? (
+        <PrismaZoom>
+          <div className="flex justify-center items-center">
+            <img
+              className={imageClass}
+              src={imagePath}
+              alt="postImage"
+              ref={imageRef}
+            />
+            <button className="text-white" onClick={closeImage}>
+              close
+            </button>
+          </div>
+        </PrismaZoom>
+      ) : (
+        <img
+          className={imageClass}
+          onClick={openImage}
+          src={imagePath}
+          alt="postImage"
+        />
+      )}
     </div>
   );
 }
