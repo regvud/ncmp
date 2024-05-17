@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { baseURL } from "../constants/urls";
 import { PostType } from "../types/contentTypes";
 import { CommentMapper } from "./CommentMapper";
 import { ModalImage } from "./ModalImage";
@@ -14,21 +13,38 @@ export const PostComponent = ({ post }: PostComponentProps) => {
 
   const imagesLength = post.images.length;
 
-  const imagePath = post.images[0]
-    ? `${baseURL}${post.images[imagePage].path}`
-    : "";
-
   function clickComments() {
     setToggleComments((prev) => !prev);
   }
 
-  function scrollImage() {
+  function checkIfLastPage() {
     if (imagePage === imagesLength - 1) {
       setImagePage(0);
-      return;
+      return 1;
     }
+    return 0;
+  }
 
-    setImagePage(imagePage + 1);
+  function checkIfFirstPage() {
+    if (imagePage === 0) {
+      setImagePage(imagesLength - 1);
+      return 1;
+    }
+    return 0;
+  }
+
+  function nextImage() {
+    const isLastPage = checkIfLastPage();
+    if (!isLastPage) {
+      setImagePage(imagePage + 1);
+    }
+  }
+
+  function prevImage() {
+    const isFirstPage = checkIfFirstPage();
+    if (!isFirstPage) {
+      setImagePage(imagePage - 1);
+    }
   }
 
   return (
@@ -37,10 +53,14 @@ export const PostComponent = ({ post }: PostComponentProps) => {
       <h2>{post.body}</h2>
       {imagesLength > 0 && (
         <div>
-          <ModalImage imagePath={imagePath} />
-          {imagesLength > 1 && (
-            <button onClick={scrollImage}>next image</button>
-          )}
+          <ModalImage
+            images={post.images}
+            imagePage={imagePage}
+            nextImage={nextImage}
+            prevImage={prevImage}
+          />
+          {imagesLength > 1 && <button onClick={nextImage}>next image</button>}
+          {imagesLength > 1 && <button onClick={prevImage}>prev image</button>}
         </div>
       )}
       <button onClick={clickComments}>Comments</button>
