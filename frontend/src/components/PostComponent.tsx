@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PostType } from "../types/contentTypes";
 import { CommentMapper } from "./CommentMapper";
-import { ModalImage } from "./ModalImage";
+import { ModalImage } from "./modal/ModalImage";
 
 interface PostComponentProps {
   post: PostType;

@@ -1,13 +1,14 @@
 import { useRef, useState } from "react";
 import PrismaZoom from "react-prismazoom";
-import { baseURL } from "../constants/urls";
-import { PostImage } from "../types/contentTypes";
+import { baseURL } from "../../constants/urls";
+import { PostImage } from "../../types/contentTypes";
+import { ModalButton } from "./ModalButton";
 
 interface ModalImageProps {
   images: PostImage[];
   imagePage: number;
-  nextImage: () => void;
-  prevImage: () => void;
+  nextImage?: () => void;
+  prevImage?: () => void;
 }
 
 export function ModalImage({
@@ -21,8 +22,8 @@ export function ModalImage({
   const [togglePopup, setTogglePopup] = useState(false);
 
   const imageClass = togglePopup
-    ? "object-contain w-[80%] h-[80%]"
-    : "object-contain w-[60%] h-[70%]";
+    ? "object-contain w-[100%] h-[100%]"
+    : "object-contain w-[60%] h-[50%]";
 
   const modalWindowClass = togglePopup
     ? "h-screen w-screen bg-black bg-opacity-80 fixed top-1/2 left-1/2 -transform -translate-x-1/2 -translate-y-1/2"
@@ -55,16 +56,22 @@ export function ModalImage({
       ref={divImageRef}
     >
       {togglePopup ? (
-        <PrismaZoom>
-          <div className="flex justify-center">
-            <img className={imageClass} src={imagePath} alt="postImage" />
+        <div className="flex justify-center items-center h-screen w-screen">
+          {images.length > 1 && prevImage && (
+            <ModalButton repr="prev" onClickFunc={prevImage} />
+          )}
+          <div className="flex flex-col justify-center items-center w-[80%] h-[100%]">
             <button className="text-white" onClick={closeImage}>
-              close
+              ☒
             </button>
-            <button onClick={nextImage}>next image</button>
-            <button onClick={prevImage}>prev image</button>
+            <PrismaZoom>
+              <img className={imageClass} src={imagePath} alt="postImage" />
+            </PrismaZoom>
           </div>
-        </PrismaZoom>
+          {images.length > 1 && nextImage && (
+            <ModalButton repr="next" onClickFunc={nextImage} />
+          )}
+        </div>
       ) : (
         <img
           className={imageClass}
