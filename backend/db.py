@@ -3,10 +3,10 @@ from typing import Annotated
 
 from dotenv import load_dotenv
 from fastapi import Depends
-from pydantic import BaseModel
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
+
 
 load_dotenv()
 
@@ -27,17 +27,17 @@ def get_session():
 db_dependency = Annotated[Session, Depends(get_session)]
 
 
-def save_db_model(db: db_dependency, obj_to_save: BaseModel):
+def save_db_model(db: db_dependency, obj_to_save):
     db.add(obj_to_save)
     db.commit()
     db.refresh(obj_to_save)
 
 
-def update_db_model(db: db_dependency, obj_to_update: BaseModel):
+def update_db_model(db: db_dependency, obj_to_update):
     db.commit()
     db.refresh(obj_to_update)
 
 
-def delete_db_model(db: db_dependency, obj_to_delete: BaseModel):
+def delete_db_model(db: db_dependency, obj_to_delete):
     db.delete(obj_to_delete)
     db.commit()

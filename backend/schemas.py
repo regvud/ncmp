@@ -141,6 +141,7 @@ class Post(PostCreate):
 
     user_id: int
     comments: list["Comment"] = []
+    likes: list["UserLike"] = []
 
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
@@ -151,6 +152,11 @@ class PostNoComments(PostCreate):
 
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+
+
+class PostCounterSchema(PostNoComments):
+    comments_count: int
+    comments: list["CommentRepliesCounterSchema"] = []
 
 
 class PostImageSchema(BaseModel):
@@ -186,6 +192,10 @@ class Comment(CommentCreate):
     updated_at: Optional[datetime]
 
 
+class CommentRepliesCounterSchema(Comment):
+    replies_count: int
+
+
 # REPLIES
 class ReplyBase(BaseModel):
     body: str
@@ -202,6 +212,7 @@ class ReplyCreate(ReplyBase):
 class Reply(ReplyCreate):
     id: int
 
+    comment_id: int
     to_user: int
     user_id: int
 

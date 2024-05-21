@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 
+from cross_related import delete_related_db_models
 import models
 import schemas
 from content.crud import (
@@ -7,7 +8,6 @@ from content.crud import (
     create_related_like_notification_models,
     get_comment_by_id,
     get_post_by_id,
-    post_handle_comment_count,
 )
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
 from enums import ContentTypeEnum, NotificationTypeEnum
@@ -30,7 +30,6 @@ async def comment_create(
     )
 
     save_db_model(db, comment)
-    post_handle_comment_count(db, post_id, True)
 
     create_related_like_notification_models(
         db=db,
@@ -79,6 +78,6 @@ async def comment_delete(
 ):
     comment_to_delete = get_comment_by_id(db, comment_id)
 
+    delete_related_db_models(db, comment_id, ContentTypeEnum.COMMENT)
     delete_db_model(db, comment_to_delete)
-    post_handle_comment_count(db, comment_to_delete.post_id, False)
     return {"detail": f"Comment {comment_id} deleted successfully"}

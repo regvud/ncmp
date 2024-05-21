@@ -6,9 +6,12 @@ from uuid import uuid1
 from dotenv import load_dotenv
 from fastapi import UploadFile
 from passlib.context import CryptContext
+from sqlalchemy import Table
 
-from enums import ImageTypeEnum
+from db import Base, db_dependency
+from enums import ContentTypeEnum, ImageTypeEnum
 from exceptions import write_file_exception
+from models import Like
 
 load_dotenv()
 
@@ -34,12 +37,23 @@ def delete_related_images(image_type: ImageTypeEnum, prefix: int):
             path = "images/posts"
             for image_file in os.listdir(path):
                 if image_file.startswith(str(prefix)):
-                    print(f"matched images {image_file}")
                     os.remove(f"{path}/{image_file}")
 
         case ImageTypeEnum.AVATAR:
             path = "images/avatars"
             for image_file in os.listdir(path):
                 if image_file.startswith(str(prefix)):
-                    print(f"matched avatars {image_file}")
                     os.remove(f"{path}/{image_file}")
+
+
+def delete_related_db_models(
+    db: db_dependency, content_id: int, content_type: ContentTypeEnum
+):
+    like_table = Table("likes", Base.metadata, autoload=True)
+    q = (
+        db.query(like_table)
+        .filter(like_table.c.content_id == content_id)
+        .filter(like_table.c.content_type == content_type)
+    )
+    q.delete()
+    db.commit()

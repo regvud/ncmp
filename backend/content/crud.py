@@ -1,21 +1,22 @@
 from fastapi import HTTPException, UploadFile
 
-import models
 from cross_related import uuid_creator, write_image_file
 from db import db_dependency, delete_db_model, save_db_model
 from enums import ContentTypeEnum, NotificationTypeEnum
 from exceptions import not_owner_exception
+import models
+from schemas import PostCounterSchema
 from users.crud import get_profile, get_user_by_id
 
 
 def check_ownership(
-    db: db_dependency, user_id: int, content_type: str, content_id: int
+    db: db_dependency, user_id: int, content_type: ContentTypeEnum, content_id: int
 ):
     match content_type:
         case ContentTypeEnum.POST:
             post = get_post_by_id(db, content_id)
             if not post.user_id == user_id:
-                raise not_owner_exception(ContentTypeEnum.Post)
+                raise not_owner_exception(ContentTypeEnum.POST)
         case ContentTypeEnum.COMMENT:
             comment = get_comment_by_id(db, content_id)
             if not comment.user_id == user_id:
@@ -28,6 +29,33 @@ def check_ownership(
 
 
 # POSTS
+def get_posts_with_counters(db: db_dependency) -> list[PostCounterSchema]:
+    posts = db.query(models.Post).order_by(models.Post.id).all()
+
+    posts_counter = []
+    for post in posts:
+        post_comments = []
+        post_dict = post.__dict__
+
+        for comment in post.comments:
+            comment_replies = []
+            comment_dict = comment.__dict__
+
+            for reply in comment.replies:
+                comment_replies.append(reply.__dict__)
+
+            comment_dict.update({"replies_count": comment.replies_count()})
+            comment_dict.update({"replies": comment_replies})
+            post_comments.append(comment_dict)
+
+        post_dict.update({"comments_count": post.comments_count()})
+        post_dict.update({"comments": post_comments})
+
+        posts_counter.append(PostCounterSchema(**post_dict))
+
+    return posts_counter
+
+
 def get_post_by_id(db: db_dependency, post_id: int) -> models.Post:
     db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
 
@@ -47,20 +75,8 @@ def upload_post_images(db: db_dependency, post_id: int, image_files: list[Upload
         save_db_model(db, new_post_image)
 
 
-def post_handle_comment_count(db: db_dependency, post_id: int, action: bool):
-    post = get_post_by_id(db, post_id)
-
-    if action:
-        post.comments_count += 1
-    else:
-        post.comments_count -= 1
-
-    db.commit()
-    db.refresh(post)
-
-
 # COMMENTS
-def get_comment_by_id(db: db_dependency, comment_id: int):
+def get_comment_by_id(db: db_dependency, comment_id: int) -> models.Comment:
     db_comment = (
         db.query(models.Comment).filter(models.Comment.id == comment_id).first()
     )

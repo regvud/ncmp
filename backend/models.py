@@ -1,14 +1,12 @@
 from sqlalchemy import (
     DECIMAL,
     Boolean,
-    CheckConstraint,
     Column,
     DateTime,
     Enum,
     ForeignKey,
     Integer,
     String,
-    event,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -118,7 +116,6 @@ class Post(BaseDataModel):
     title = Column(String(200), index=True)
     body = Column(String)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    comments_count = Column(Integer, nullable=False, default=0)
     comments = relationship(
         "Comment",
         uselist=True,
@@ -134,6 +131,9 @@ class Post(BaseDataModel):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+
+    def comments_count(self):
+        return self.comments.count()
 
 
 class PostImage(BaseDataModel):
@@ -153,7 +153,6 @@ class Comment(BaseDataModel):
     body = Column(String(1000))
     post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True)
-
     replies = relationship(
         "Reply",
         uselist=True,
@@ -162,6 +161,9 @@ class Comment(BaseDataModel):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+
+    def replies_count(self):
+        return self.replies.count()
 
 
 class Reply(BaseDataModel):

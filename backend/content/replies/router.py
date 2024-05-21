@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 
+from cross_related import delete_related_db_models
 import models
 import schemas
 from content.crud import (
@@ -31,19 +32,19 @@ async def reply_create(
         "to_user": comment.user_id,
     }
 
-    reply = models.Reply(**data)
-    save_db_model(db, reply)
+    new_reply = models.Reply(**data)
+    save_db_model(db, new_reply)
 
     create_related_like_notification_models(
         db=db,
         content_type=ContentTypeEnum.REPLY,
         notification_type=NotificationTypeEnum.REPLY,
-        content_id=reply.id,
+        content_id=new_reply.id,
         current_user_id=current_user.id,
-        user_to_notify_id=reply.to_user,
+        user_to_notify_id=new_reply.to_user,
     )
 
-    return reply
+    return new_reply
 
 
 @router.get("/{reply_id}", response_model=schemas.Reply)
@@ -81,5 +82,6 @@ async def reply_delete(
     current_user: schemas.AuthenticatedUser = Depends(delete_permission),
 ):
     reply_to_delete = get_reply_by_id(db, reply_id)
+    delete_related_db_models(db, reply_id, ContentTypeEnum.REPLY)
     delete_db_model(db, reply_to_delete)
     return {"detail": f"Reply {reply_id} deleted successfully"}

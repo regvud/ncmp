@@ -4,9 +4,10 @@ import models
 import schemas
 from content.crud import (
     get_post_by_id,
+    get_posts_with_counters,
     upload_post_images,
 )
-from cross_related import delete_related_images
+from cross_related import delete_related_db_models, delete_related_images
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
 from enums import ContentTypeEnum, ImageTypeEnum
 from permissions import owner_permission
@@ -29,15 +30,15 @@ async def post_create(
     return post
 
 
-@router.get("/", response_model=list[schemas.Post])
+@router.get("/", response_model=list[schemas.PostCounterSchema])
 async def posts(db: db_dependency):
-    return db.query(models.Post).order_by(models.Post.id).all()
+    posts = get_posts_with_counters(db)
+    return posts
 
 
 @router.get("/{post_id}", response_model=schemas.Post)
 async def post_by_id(db: db_dependency, post_id: int):
     post = get_post_by_id(db, post_id)
-    print(post)
     return post
 
 
@@ -66,6 +67,8 @@ async def post_delete(
     post_to_delete = get_post_by_id(db, post_id)
 
     delete_related_images(ImageTypeEnum.POST, post_id)
+    delete_related_db_models(db, post_id, ContentTypeEnum.POST)
+
     delete_db_model(db, post_to_delete)
     return {"detail": f"Post {post_id} deleted successfully"}
 
