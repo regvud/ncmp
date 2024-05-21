@@ -52,7 +52,8 @@ export const PostComponent = ({ post }: PostComponentProps) => {
       <h1 className="text-slate-400">{post.title}</h1>
       <h2>{post.body}</h2>
       {imagesLength > 0 && (
-        <div>
+        <div className="flex justify-between w-[50%] h-[50%]">
+          {imagesLength > 1 && <button onClick={prevImage}>prev image</button>}
           <ModalImage
             images={post.images}
             imagePage={imagePage}
@@ -60,7 +61,6 @@ export const PostComponent = ({ post }: PostComponentProps) => {
             prevImage={prevImage}
           />
           {imagesLength > 1 && <button onClick={nextImage}>next image</button>}
-          {imagesLength > 1 && <button onClick={prevImage}>prev image</button>}
         </div>
       )}
       <button onClick={clickComments}>Comments</button>

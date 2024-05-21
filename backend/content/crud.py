@@ -1,4 +1,5 @@
 from fastapi import HTTPException, UploadFile
+from sqlalchemy.orm import joinedload
 
 from cross_related import uuid_creator, write_image_file
 from db import db_dependency, delete_db_model, save_db_model
@@ -33,23 +34,28 @@ def get_posts_with_counters(db: db_dependency) -> list[PostCounterSchema]:
     posts = db.query(models.Post).order_by(models.Post.id).all()
 
     posts_counter = []
+
     for post in posts:
+        post_images = [image.__dict__ for image in post.images]
+
         post_comments = []
-        post_dict = post.__dict__
-
         for comment in post.comments:
-            comment_replies = []
+            comment_replies = [reply.__dict__ for reply in comment.replies]
+
             comment_dict = comment.__dict__
-
-            for reply in comment.replies:
-                comment_replies.append(reply.__dict__)
-
-            comment_dict.update({"replies_count": comment.replies_count()})
-            comment_dict.update({"replies": comment_replies})
+            comment_dict.update(
+                {"replies_count": comment.replies_count(), "replies": comment_replies}
+            )
             post_comments.append(comment_dict)
 
-        post_dict.update({"comments_count": post.comments_count()})
-        post_dict.update({"comments": post_comments})
+        post_dict = post.__dict__
+        post_dict.update(
+            {
+                "images": post_images,
+                "comments_count": post.comments_count(),
+                "comments": post_comments,
+            }
+        )
 
         posts_counter.append(PostCounterSchema(**post_dict))
 
