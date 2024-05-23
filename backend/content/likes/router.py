@@ -5,7 +5,7 @@ from enums import ContentTypeEnum
 from permissions import authenticated_permission
 from schemas import AuthenticatedUser, Like, LikeCounter
 
-from .crud import get_like_counter_schema, user_like_create, user_like_delete
+from content.crud import get_like_counter_schema, user_like_create, user_like_delete
 
 router = APIRouter(prefix="/likes", tags=["Likes"])
 
@@ -14,13 +14,9 @@ router = APIRouter(prefix="/likes", tags=["Likes"])
 async def get_post_like(
     db: db_dependency,
     post_id: int,
-    current_user: AuthenticatedUser = Depends(authenticated_permission),
 ):
     return get_like_counter_schema(
-        db=db,
-        content_type=ContentTypeEnum.POST,
-        content_id=post_id,
-        user_id=current_user.id,
+        db=db, content_type=ContentTypeEnum.POST, content_id=post_id
     )
 
 
@@ -56,13 +52,9 @@ async def post_user_like_delete(
 async def get_comment_like(
     db: db_dependency,
     comment_id: int,
-    current_user: AuthenticatedUser = Depends(authenticated_permission),
 ):
     return get_like_counter_schema(
-        db=db,
-        content_type=ContentTypeEnum.COMMENT,
-        content_id=comment_id,
-        user_id=current_user.id,
+        db=db, content_type=ContentTypeEnum.COMMENT, content_id=comment_id
     )
 
 
@@ -98,13 +90,9 @@ async def comment_user_like_delete(
 async def get_reply_like(
     db: db_dependency,
     reply_id: int,
-    current_user: AuthenticatedUser = Depends(authenticated_permission),
 ):
     return get_like_counter_schema(
-        db=db,
-        content_type=ContentTypeEnum.REPLY,
-        content_id=reply_id,
-        user_id=current_user.id,
+        db=db, content_type=ContentTypeEnum.REPLY, content_id=reply_id
     )
 
 

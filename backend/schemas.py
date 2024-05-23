@@ -47,6 +47,7 @@ class AuthenticatedUser(UserBase):
     id: int
     exp: float
     is_owner: bool
+    is_active: bool
 
 
 class UserAuthSchema(UserBase):

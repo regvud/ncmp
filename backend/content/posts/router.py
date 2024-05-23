@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile
 
-import models
-import schemas
 from content.crud import (
     get_post_by_id,
     get_posts_with_counters,
@@ -10,7 +8,9 @@ from content.crud import (
 from cross_related import delete_related_db_models, delete_related_images
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
 from enums import ContentTypeEnum, ImageTypeEnum
+import models
 from permissions import owner_permission
+import schemas
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -18,10 +18,10 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 @router.post("/create", response_model=schemas.Post)
 async def post_create(
     db: db_dependency,
-    post: schemas.PostCreate,
+    post_create: schemas.PostCreate,
     current_user: schemas.AuthenticatedUser = Depends(owner_permission),
 ):
-    post = models.Post(**post.model_dump(), user_id=current_user.id)
+    post = models.Post(**post_create.model_dump(), user_id=current_user.id)
     save_db_model(db, post)
 
     like = models.Like(content_id=post.id, content_type=ContentTypeEnum.POST)

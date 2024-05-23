@@ -58,17 +58,28 @@ def authenticate_user(email: str, password: str, db: db_dependency):
     return user
 
 
-def create_token(email: str, user_id: int, is_owner: bool, expire_delta: timedelta):
-    encode = {"email": email, "id": user_id, "is_owner": is_owner}
+def create_token(
+    email: str, user_id: int, is_owner: bool, is_active: bool, expire_delta: timedelta
+):
     expires = datetime.now() + expire_delta
-
-    encode.update({"exp": expires.timestamp()})
+    encode = {
+        "email": email,
+        "id": user_id,
+        "is_owner": is_owner,
+        "is_active": is_active,
+        "exp": expires.timestamp(),
+    }
 
     return jwt.encode(encode, env.get("SECRET_KEY"), algorithm=env.get("ALGORITHM"))
 
 
 def generate_access_refresh_tokens(user: models.User):
-    user_data = {"email": user.email, "user_id": user.id, "is_owner": user.is_owner}
+    user_data = {
+        "email": user.email,
+        "user_id": user.id,
+        "is_owner": user.is_owner,
+        "is_active": user.is_active,
+    }
 
     access = create_token(
         **user_data,
@@ -88,10 +99,11 @@ async def swagger_token(
     authenticated_user = authenticate_user(user.username, user.password, db)
 
     access = create_token(
-        authenticated_user.email,
-        authenticated_user.id,
-        authenticated_user.is_owner,
-        timedelta(
+        email=authenticated_user.email,
+        user_id=authenticated_user.id,
+        is_owner=authenticated_user.is_owner,
+        is_active=authenticated_user.is_active,
+        expire_delta=timedelta(
             minutes=ACCESS_TOKEN_EXPIRE_MINUTES,
         ),
     )
