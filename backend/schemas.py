@@ -5,6 +5,11 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class StatsLikes(BaseModel):
+    likes_count: int
+    users_liked: list[int]
+
+
 # USER RELATED
 class UserBase(BaseModel):
     email: str
@@ -155,7 +160,7 @@ class PostNoComments(PostCreate):
     updated_at: Optional[datetime]
 
 
-class PostCounterSchema(PostNoComments):
+class PostCounterSchema(PostNoComments, StatsLikes):
     comments_count: int
     comments: list["CommentRepliesCounterSchema"] = []
 
@@ -170,6 +175,7 @@ class PostImageSchema(BaseModel):
     updated_at: Optional[datetime]
 
 
+# COMMENT
 class CommentBase(BaseModel):
     body: str
 
@@ -193,8 +199,17 @@ class Comment(CommentCreate):
     updated_at: Optional[datetime]
 
 
-class CommentRepliesCounterSchema(Comment):
+class CommentRepliesCounterSchema(CommentBase, StatsLikes):
+    id: int
+
+    post_id: int
+    user_id: int
+    replies: list["ReplyCounterSchema"] = []
+
     replies_count: int
+
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
 
 # REPLIES
@@ -219,6 +234,10 @@ class Reply(ReplyCreate):
 
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+
+
+class ReplyCounterSchema(Reply, StatsLikes):
+    pass
 
 
 # LIKES

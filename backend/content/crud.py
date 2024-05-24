@@ -5,28 +5,71 @@ from cross_related import uuid_creator, write_image_file
 from db import db_dependency, delete_db_model, save_db_model
 from enums import ContentTypeEnum, NotificationTypeEnum
 import models
-from schemas import LikeCounter, Notification, PostCounterSchema
+from schemas import LikeCounter, PostCounterSchema
 from users.crud import get_profile, get_user_by_id
 
 
 # POSTS
+def filter_popper(idx: int, iterable: list):
+    filtered_obj = list(filter(lambda like: like.content_id == idx, iterable))[0]
+    like_idx = iterable.index(filtered_obj)
+    iterable.pop(like_idx)
+    return filtered_obj
+
+
 def get_posts_with_counters(db: db_dependency) -> list[PostCounterSchema]:
-    posts = db.query(models.Post).order_by(models.Post.id).all()
+    posts = db.query(models.Post).all()
+    query_likes = db.query(models.Like)
+
+    post_likes = query_likes.filter(
+        models.Like.content_type == ContentTypeEnum.POST
+    ).all()
+
+    comment_likes = query_likes.filter(
+        models.Like.content_type == ContentTypeEnum.COMMENT
+    ).all()
+    reply_likes = query_likes.filter(
+        models.Like.content_type == ContentTypeEnum.REPLY
+    ).all()
 
     posts_counter = []
 
     for post in posts:
-        post_like = get_like_counter_schema(db, ContentTypeEnum.POST, post.id)
-        print(post_like)
         post_images = [image.__dict__ for image in post.images]
+        post_like = filter_popper(post.id, post_likes)
 
+        post_users = [user_like.user_id for user_like in post_like.users_liked]
         post_comments = []
-        for comment in post.comments:
-            comment_replies = [reply.__dict__ for reply in comment.replies]
 
+        for comment in post.comments:
+
+            comment_replies = []
+            for reply in comment.replies:
+                reply_dict = reply.__dict__
+                reply_like = filter_popper(reply.id, reply_likes)
+                comment_users = [
+                    user_like.user_id for user_like in reply_like.users_liked
+                ]
+
+                reply_dict.update(
+                    {
+                        "likes_count": len(reply_like.users_liked),
+                        "users_liked": comment_users,
+                    }
+                )
+                comment_replies.append(reply_dict)
+
+            comment_like = filter_popper(comment.id, comment_likes)
             comment_dict = comment.__dict__
+
+            reply_users = [user_like.user_id for user_like in comment_like.users_liked]
             comment_dict.update(
-                {"replies_count": comment.replies_count(), "replies": comment_replies}
+                {
+                    "replies_count": comment.replies_count(),
+                    "replies": comment_replies,
+                    "likes_count": len(comment_like.users_liked),
+                    "users_liked": reply_users,
+                }
             )
             post_comments.append(comment_dict)
 
@@ -35,6 +78,8 @@ def get_posts_with_counters(db: db_dependency) -> list[PostCounterSchema]:
             {
                 "images": post_images,
                 "comments_count": post.comments_count(),
+                "likes_count": len(post_like.users_liked),
+                "users_liked": post_users,
                 "comments": post_comments,
             }
         )
@@ -54,7 +99,7 @@ def get_post_by_id(db: db_dependency, post_id: int) -> models.Post:
 
 def upload_post_images(db: db_dependency, post_id: int, image_files: list[UploadFile]):
     for image_file in image_files:
-        uu_filename = uuid_creator(image_file.filename, post_id)
+        uu_filename = uuid_creator(image_file.filename, str(post_id))
         path_to_file = f"images/posts/{uu_filename}"
 
         write_image_file(image_file, path_to_file)
@@ -126,9 +171,7 @@ def read_notifications(db: db_dependency, user_id: int) -> bool:
     return True
 
 
-def message_notification(
-    notification_type: NotificationTypeEnum, from_user: models.User
-):
+def message_notification(notification_type: str, from_user: models.User):
     return f"You have new {notification_type} from user {from_user.email}"
 
 
@@ -199,7 +242,8 @@ def user_like_create(
     if db_user_like:
         raise liked_exception(content_type)
 
-    user_like = models.UserLike(like_id=content_like.id, user_id=user_id)
+    data = {"like_id": content_like.id, "user_id": user_id}
+    user_like = models.UserLike(**data)
     current_user = get_user_by_id(db, user_id)
 
     notification_data = {
@@ -213,15 +257,15 @@ def user_like_create(
 
             if current_user.id != post.user_id:
                 notification_data.update({"profile_id": f"{post.user_id}"})
-                notification = Notification(**notification_data)
+                notification = models.Notification(**notification_data)
                 save_db_model(db, notification)
 
         case ContentTypeEnum.REPLY:
             reply = get_reply_by_id(db, content_id)
 
             if current_user.id != reply.to_user:
-                notification_data.update({"profile_id": f"{reply.to_user}"})
-                notification = Notification(**notification_data)
+                notification_data.update({"profile_id": reply.to_user})
+                notification = models.Notification(**notification_data)
                 save_db_model(db, notification)
 
         case ContentTypeEnum.COMMENT:
@@ -229,7 +273,7 @@ def user_like_create(
 
             if current_user.id != comment.user_id:
                 notification_data.update({"profile_id": f"{comment.user_id}"})
-                notification = Notification(**notification_data)
+                notification = models.Notification(**notification_data)
                 save_db_model(db, notification)
 
     save_db_model(db, user_like)

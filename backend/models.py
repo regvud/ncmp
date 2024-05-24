@@ -197,8 +197,6 @@ class Like(BaseDataModel):
         passive_deletes=True,
     )
 
-    # __table_args__ = (CheckConstraint("count >= 0", name="min_count_constraint"),)
-
 
 class UserLike(BaseDataModel):
     __tablename__ = "user_like"
