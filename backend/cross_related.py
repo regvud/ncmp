@@ -11,7 +11,6 @@ from sqlalchemy import Table
 from db import Base, db_dependency
 from enums import ContentTypeEnum, ImageTypeEnum
 from exceptions import write_file_exception
-from models import Like
 
 load_dotenv()
 

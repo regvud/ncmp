@@ -5,6 +5,7 @@ import schemas
 from cross_related import delete_related_images
 from db import db_dependency, delete_db_model, update_db_model
 from enums import ImageTypeEnum
+from pagination import Pagination
 from permissions import authenticated_permission, owner_permission
 
 from .crud import get_profile, get_user_by_id, upload_avatar, user_create
@@ -53,13 +54,15 @@ async def new_user_create(db: db_dependency, user: schemas.UserCreate):
     return user_create(db, user)
 
 
-@router.get("/", response_model=list[schemas.User])
+@router.get("/", response_model=schemas.PaginatedSchema[schemas.User])
 async def user_list(
     db: db_dependency,
+    page: int = 1,
+    size: int = 10,
     current_user: schemas.AuthenticatedUser = Depends(authenticated_permission),
 ):
-    print(current_user)
-    return db.query(models.User).order_by(models.User.id).all()
+    users = Pagination.paginator(db, models.User, page=page, size=size)
+    return users
 
 
 @router.get("/{user_id}", response_model=schemas.User)

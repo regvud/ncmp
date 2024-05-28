@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends
 
+from content.crud import (get_like_counter_schema, user_like_create,
+                          user_like_delete)
 from db import db_dependency
 from enums import ContentTypeEnum
 from permissions import authenticated_permission
 from schemas import AuthenticatedUser, Like, LikeCounter
-
-from content.crud import get_like_counter_schema, user_like_create, user_like_delete
 
 router = APIRouter(prefix="/likes", tags=["Likes"])
 

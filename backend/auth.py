@@ -7,12 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 
+import models
+import schemas
 from config import CLIENT_ID, CLIENT_SECRET
 from cross_related import pwd_context
 from db import db_dependency
 from exceptions import TOKEN_EXPIRED_EXCEPTION, UNAUTHORIZED_EXCEPTION
-import models
-import schemas
 from users.crud import get_user_by_email, oauth_user_create
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 500

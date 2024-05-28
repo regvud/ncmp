@@ -1,7 +1,9 @@
 import pathlib
 
 from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi_pagination import add_pagination
 from starlette.middleware.sessions import SessionMiddleware
 
 import models
@@ -16,7 +18,6 @@ from db import engine
 from exceptions import FILE_NOT_FOUND_EXCEPTION
 from products.router import router as product_router
 from users.router import router as user_router
-from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -66,3 +67,5 @@ routers = (
 
 for router in routers:
     app.include_router(router)
+
+add_pagination(app)

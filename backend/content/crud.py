@@ -1,10 +1,10 @@
 from fastapi import HTTPException, UploadFile
 
-from exceptions import liked_exception, unliked_exception
+import models
 from cross_related import uuid_creator, write_image_file
 from db import db_dependency, delete_db_model, save_db_model
 from enums import ContentTypeEnum, NotificationTypeEnum
-import models
+from exceptions import liked_exception, unliked_exception
 from schemas import LikeCounter, PostCounterSchema
 from users.crud import get_profile, get_user_by_id
 
@@ -17,8 +17,7 @@ def filter_popper(idx: int, iterable: list):
     return filtered_obj
 
 
-def get_posts_with_counters(db: db_dependency) -> list[PostCounterSchema]:
-    posts = db.query(models.Post).all()
+def get_posts_with_counters(db: db_dependency, posts: list) -> list[PostCounterSchema]:
     query_likes = db.query(models.Like)
 
     post_likes = query_likes.filter(
@@ -35,14 +34,12 @@ def get_posts_with_counters(db: db_dependency) -> list[PostCounterSchema]:
     posts_counter = []
 
     for post in posts:
-        post_images = [image.__dict__ for image in post.images]
         post_like = filter_popper(post.id, post_likes)
 
         post_users = [user_like.user_id for user_like in post_like.users_liked]
         post_comments = []
 
         for comment in post.comments:
-
             comment_replies = []
             for reply in comment.replies:
                 reply_dict = reply.__dict__
@@ -65,7 +62,7 @@ def get_posts_with_counters(db: db_dependency) -> list[PostCounterSchema]:
             reply_users = [user_like.user_id for user_like in comment_like.users_liked]
             comment_dict.update(
                 {
-                    "replies_count": comment.replies_count(),
+                    "replies_count": len(comment_replies),
                     "replies": comment_replies,
                     "likes_count": len(comment_like.users_liked),
                     "users_liked": reply_users,
@@ -76,8 +73,7 @@ def get_posts_with_counters(db: db_dependency) -> list[PostCounterSchema]:
         post_dict = post.__dict__
         post_dict.update(
             {
-                "images": post_images,
-                "comments_count": post.comments_count(),
+                "comments_count": len(post_comments),
                 "likes_count": len(post_like.users_liked),
                 "users_liked": post_users,
                 "comments": post_comments,
@@ -85,7 +81,6 @@ def get_posts_with_counters(db: db_dependency) -> list[PostCounterSchema]:
         )
 
         posts_counter.append(PostCounterSchema(**post_dict))
-
     return posts_counter
 
 

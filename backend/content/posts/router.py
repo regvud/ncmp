@@ -1,16 +1,14 @@
 from fastapi import APIRouter, Depends, UploadFile
 
-from content.crud import (
-    get_post_by_id,
-    get_posts_with_counters,
-    upload_post_images,
-)
+import models
+import schemas
+from content.crud import (get_post_by_id, get_posts_with_counters,
+                          upload_post_images)
 from cross_related import delete_related_db_models, delete_related_images
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
 from enums import ContentTypeEnum, ImageTypeEnum
-import models
+from pagination import Pagination
 from permissions import owner_permission
-import schemas
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -30,10 +28,13 @@ async def post_create(
     return post
 
 
-@router.get("/", response_model=list[schemas.PostCounterSchema])
-async def posts(db: db_dependency):
-    posts = get_posts_with_counters(db)
-    return posts
+@router.get("/", response_model=schemas.PaginatedSchema[schemas.PostCounterSchema])
+async def posts(db: db_dependency, page: int = 1, size: int = 10):
+    paginated_response = Pagination.paginator(db, models.Post, page=page, size=size)
+    posts = get_posts_with_counters(db, paginated_response.items)
+
+    paginated_response.items = posts
+    return paginated_response
 
 
 @router.get("/{post_id}", response_model=schemas.Post)

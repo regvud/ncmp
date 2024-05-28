@@ -1,8 +1,17 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Generic, Optional, TypeVar
 
 from pydantic import BaseModel
+
+T = TypeVar("T")
+
+
+class PaginatedSchema(BaseModel, Generic[T]):
+    items: list[T] = []
+    pages: int
+    page: int
+    size: int
 
 
 class StatsLikes(BaseModel):
@@ -156,11 +165,17 @@ class Post(PostCreate):
 class PostNoComments(PostCreate):
     id: int
 
+    user_id: int
+    likes: list["UserLike"] = []
+
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
 
-class PostCounterSchema(PostNoComments, StatsLikes):
+class PostCounterSchema(PostBase, StatsLikes):
+    user_id: int
+    likes: list["UserLike"] = []
+
     comments_count: int
     comments: list["CommentRepliesCounterSchema"] = []
 
