@@ -16,6 +16,7 @@ fastapi==0.111.0
 fastapi-auth==0.1.1
 fastapi-cli==0.0.3
 fastapi-jinja==0.2.0
+fastapi-pagination==0.12.24
 fastapi-sa==0.1.0
 greenlet==3.0.3
 h11==0.14.0
