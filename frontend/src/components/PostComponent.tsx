@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { PostType } from "../types/contentTypes";
+import { PostCounterType } from "../types/counterContentTypes";
 import { CommentMapper } from "./CommentMapper";
 import { ModalImage } from "./modal/ModalImage";
 
 interface PostComponentProps {
-  post: PostType;
+  post: PostCounterType;
 }
 
 export const PostComponent = ({ post }: PostComponentProps) => {
@@ -48,9 +48,11 @@ export const PostComponent = ({ post }: PostComponentProps) => {
   }
 
   return (
-    <div>
+    <div className="border border-sky-500">
       <h1 className="text-slate-400">{post.title}</h1>
       <h2>{post.body}</h2>
+      <h2>user liked: {post.users_liked}</h2>
+      <h2>comments: {post.comments_count}</h2>
       {imagesLength > 0 && (
         <div className="flex justify-between w-[50%] h-[50%]">
           {imagesLength > 1 && <button onClick={prevImage}>prev image</button>}

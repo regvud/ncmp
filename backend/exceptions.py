@@ -16,6 +16,8 @@ FILE_NOT_FOUND_EXCEPTION = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND, detail="File not found"
 )
 
+PAGE_NOT_FOUND_EXCEPTION = HTTPException(status_code=404, detail="Page not found")
+
 
 def liked_exception(content_type: ContentTypeEnum):
     raise HTTPException(

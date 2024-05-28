@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { CommentType } from "../types/contentTypes";
+import { CommentCounterType } from "../types/counterContentTypes";
 import { ReplyMapper } from "./ReplyMapper";
 
 interface CommentComponentProps {
-  comment: CommentType;
+  comment: CommentCounterType;
 }
 
 export const CommentComponent = ({ comment }: CommentComponentProps) => {
@@ -14,8 +14,10 @@ export const CommentComponent = ({ comment }: CommentComponentProps) => {
   }
 
   return (
-    <div>
+    <div className="border border-orange-500">
       <h2>{comment.body}</h2>
+      <h2>liked: {comment.users_liked}</h2>
+      <h2>replies: {comment.replies_count}</h2>
       <button onClick={clickReplies}>replies</button>
       {toggleReplies && <ReplyMapper replies={comment.replies} />}
     </div>

@@ -173,6 +173,8 @@ class PostNoComments(PostCreate):
 
 
 class PostCounterSchema(PostBase, StatsLikes):
+    id: int
+
     user_id: int
     likes: list["UserLike"] = []
 

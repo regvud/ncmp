@@ -1,8 +1,8 @@
-import { CommentType } from "../types/contentTypes";
+import { CommentCounterType } from "../types/counterContentTypes";
 import { CommentComponent } from "./CommentComponent";
 
 interface CommentMapperProps {
-  comments: CommentType[];
+  comments: CommentCounterType[];
 }
 
 export const CommentMapper = ({ comments }: CommentMapperProps) => {
