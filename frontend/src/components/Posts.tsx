@@ -21,6 +21,8 @@ export const Posts = () => {
 
   useEffect(() => {
     if (inView) {
+      console.log(error);
+      console.log(status);
       fetchNextPage();
     }
   }, [fetchNextPage, inView]);
@@ -28,9 +30,11 @@ export const Posts = () => {
   return (
     <>
       {data?.pages.map((page) => {
-        return <PostMapper posts={page.data.items} />;
+        return <PostMapper posts={page.data.items} key={page.data.page} />;
       })}
-      <div ref={ref}>{isFetchingNextPage && "Loading..."}</div>
+      <div className="h-2" ref={ref}>
+        {isFetchingNextPage && "Loading..."}
+      </div>
     </>
   );
 };

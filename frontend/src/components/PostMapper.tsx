@@ -1,5 +1,3 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { postService } from "../services/postService";
 import { PostCounterType } from "../types/counterContentTypes";
 import { PostComponent } from "./PostComponent";
 
