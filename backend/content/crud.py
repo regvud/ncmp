@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from fastapi import HTTPException, UploadFile
 
 import models
@@ -18,70 +20,71 @@ def filter_popper(idx: int, iterable: list):
 
 
 def get_posts_with_counters(db: db_dependency, posts: list) -> list[PostCounterSchema]:
+    post_ids = [post.id for post in posts]
+
     query_likes = db.query(models.Like)
 
     post_likes = query_likes.filter(
-        models.Like.content_type == ContentTypeEnum.POST
+        (models.Like.content_type == ContentTypeEnum.POST)
+        & (models.Like.content_id.in_(post_ids))
     ).all()
 
     comment_likes = query_likes.filter(
         models.Like.content_type == ContentTypeEnum.COMMENT
     ).all()
+
     reply_likes = query_likes.filter(
         models.Like.content_type == ContentTypeEnum.REPLY
     ).all()
 
-    posts_counter = []
-
+    post_schemas = []
     for post in posts:
-        post_like = filter_popper(post.id, post_likes)
+        cnt_like = filter_popper(post.id, post_likes)
+        post_like_ids = [ul.id for ul in cnt_like.users_liked]
 
-        post_users = [user_like.user_id for user_like in post_like.users_liked]
+        post_images = [image.__dict__ for image in post.images]
+
         post_comments = []
-
         for comment in post.comments:
+            cnt_like = filter_popper(comment.id, comment_likes)
+            comment_like_ids = [ul.id for ul in cnt_like.users_liked]
+
             comment_replies = []
             for reply in comment.replies:
-                reply_dict = reply.__dict__
-                reply_like = filter_popper(reply.id, reply_likes)
-                comment_users = [
-                    user_like.user_id for user_like in reply_like.users_liked
-                ]
+                cnt_like = filter_popper(reply.id, reply_likes)
+                reply_like_ids = [ul.id for ul in cnt_like.users_liked]
 
+                reply_dict = reply.__dict__.copy()
                 reply_dict.update(
-                    {
-                        "likes_count": len(reply_like.users_liked),
-                        "users_liked": comment_users,
-                    }
+                    {"likes_count": len(reply_like_ids), "users_liked": reply_like_ids}
                 )
                 comment_replies.append(reply_dict)
 
-            comment_like = filter_popper(comment.id, comment_likes)
-            comment_dict = comment.__dict__
-
-            reply_users = [user_like.user_id for user_like in comment_like.users_liked]
+            comment_dict = comment.__dict__.copy()
             comment_dict.update(
                 {
                     "replies_count": len(comment_replies),
                     "replies": comment_replies,
-                    "likes_count": len(comment_like.users_liked),
-                    "users_liked": reply_users,
+                    "likes_count": len(comment_like_ids),
+                    "users_liked": comment_like_ids,
                 }
             )
             post_comments.append(comment_dict)
 
-        post_dict = post.__dict__
+        post_dict = post.__dict__.copy()
         post_dict.update(
             {
                 "comments_count": len(post_comments),
-                "likes_count": len(post_like.users_liked),
-                "users_liked": post_users,
+                "images": post_images,
+                "likes_count": len(post_like_ids),
+                "users_liked": post_like_ids,
                 "comments": post_comments,
             }
         )
 
-        posts_counter.append(PostCounterSchema(**post_dict))
-    return posts_counter
+        post_schemas.append(PostCounterSchema(**post_dict))
+
+    return post_schemas
 
 
 def get_post_by_id(db: db_dependency, post_id: int) -> models.Post:

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile
+from fastapi_cache.decorator import cache
 
 import models
 import schemas
@@ -28,7 +29,8 @@ async def post_create(
 
 
 @router.get("/", response_model=schemas.PaginatedSchema[schemas.PostCounterSchema])
-async def posts(db: db_dependency, page: int = 1, size: int = 5):
+@cache(expire=30)
+async def posts(db: db_dependency, page: int = 1, size: int = 10):
     paginated_response = Pagination.paginator(db, models.Post, page=page, size=size)
     posts = get_posts_with_counters(db, paginated_response.items)
 

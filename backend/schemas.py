@@ -176,7 +176,6 @@ class PostCounterSchema(PostBase, StatsLikes):
     id: int
 
     user_id: int
-    likes: list["UserLike"] = []
 
     comments_count: int
     comments: list["CommentRepliesCounterSchema"] = []

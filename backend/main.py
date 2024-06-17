@@ -1,9 +1,14 @@
 import pathlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
 from fastapi_pagination import add_pagination
+from redis import asyncio as aioredis
 from starlette.middleware.sessions import SessionMiddleware
 
 import models
@@ -21,9 +26,18 @@ from users.router import router as user_router
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    redis = aioredis.from_url("redis://localhost")
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 app_router = APIRouter(tags=["View Images"])
+
 app.add_middleware(SessionMiddleware, secret_key=SESSION_MIDDLEWARE_SECRET)
 app.add_middleware(
     CORSMiddleware,

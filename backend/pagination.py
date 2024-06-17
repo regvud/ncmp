@@ -2,8 +2,8 @@ from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.sql import select
 
-from exceptions import PAGE_NOT_FOUND_EXCEPTION
 from db import db_dependency
+from exceptions import PAGE_NOT_FOUND_EXCEPTION
 
 
 class Pagination:
