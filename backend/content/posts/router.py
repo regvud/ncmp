@@ -3,7 +3,11 @@ from fastapi_cache.decorator import cache
 
 import models
 import schemas
-from content.crud import get_post_by_id, get_posts_with_counters, upload_post_images
+from content.crud import (
+    get_post_by_id,
+    get_posts_with_counters,
+    upload_post_images,
+)
 from cross_related import delete_related_db_models, delete_related_images
 from db import db_dependency, delete_db_model, save_db_model, update_db_model
 from enums import ContentTypeEnum, ImageTypeEnum

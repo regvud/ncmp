@@ -1,10 +1,10 @@
 from collections import defaultdict
-
 from fastapi import HTTPException, UploadFile
 
 import models
 from cross_related import uuid_creator, write_image_file
 from db import db_dependency, delete_db_model, save_db_model
+from decorators import timer
 from enums import ContentTypeEnum, NotificationTypeEnum
 from exceptions import liked_exception, unliked_exception
 from schemas import LikeCounter, PostCounterSchema
@@ -19,40 +19,42 @@ def filter_popper(idx: int, iterable: list):
     return filtered_obj
 
 
-def get_posts_with_counters(db: db_dependency, posts: list) -> list[PostCounterSchema]:
-    post_ids = [post.id for post in posts]
+@timer
+def get_posts_with_counters(
+    db: db_dependency, posts: list[models.Post]
+) -> list[PostCounterSchema]:
 
-    query_likes = db.query(models.Like)
+    query_likes = db.query(models.Like).all()
 
-    post_likes = query_likes.filter(
-        (models.Like.content_type == ContentTypeEnum.POST)
-        & (models.Like.content_id.in_(post_ids))
-    ).all()
+    likes_by_content_type = {
+        ContentTypeEnum.POST: [],
+        ContentTypeEnum.COMMENT: [],
+        ContentTypeEnum.REPLY: [],
+    }
 
-    comment_likes = query_likes.filter(
-        models.Like.content_type == ContentTypeEnum.COMMENT
-    ).all()
+    for like in query_likes:
+        likes_by_content_type[like.content_type].append(like)
 
-    reply_likes = query_likes.filter(
-        models.Like.content_type == ContentTypeEnum.REPLY
-    ).all()
+    post_likes = likes_by_content_type[ContentTypeEnum.POST]
+    comment_likes = likes_by_content_type[ContentTypeEnum.COMMENT]
+    reply_likes = likes_by_content_type[ContentTypeEnum.REPLY]
 
     post_schemas = []
     for post in posts:
         cnt_like = filter_popper(post.id, post_likes)
-        post_like_ids = [ul.id for ul in cnt_like.users_liked]
+        post_like_ids = {ul.user_id for ul in cnt_like.users_liked}
 
         post_images = [image.__dict__ for image in post.images]
 
         post_comments = []
         for comment in post.comments:
             cnt_like = filter_popper(comment.id, comment_likes)
-            comment_like_ids = [ul.id for ul in cnt_like.users_liked]
+            comment_like_ids = {ul.user_id for ul in cnt_like.users_liked}
 
             comment_replies = []
             for reply in comment.replies:
                 cnt_like = filter_popper(reply.id, reply_likes)
-                reply_like_ids = [ul.id for ul in cnt_like.users_liked]
+                reply_like_ids = {ul.user_id for ul in cnt_like.users_liked}
 
                 reply_dict = reply.__dict__.copy()
                 reply_dict.update(
