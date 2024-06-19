@@ -57,6 +57,15 @@ class User(BaseDataModel):
         passive_deletes=True,
     )
 
+    user_likes = relationship(
+        "UserLike",
+        uselist=True,
+        backref="users",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
 
 class Profile(BaseDataModel):
     __tablename__ = "profiles"

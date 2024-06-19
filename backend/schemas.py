@@ -16,7 +16,7 @@ class PaginatedSchema(BaseModel, Generic[T]):
 
 class StatsLikes(BaseModel):
     likes_count: int
-    users_liked: list[int]
+    users_liked: list
 
 
 # USER RELATED
