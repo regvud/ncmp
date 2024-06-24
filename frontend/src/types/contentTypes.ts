@@ -1,3 +1,8 @@
+export type UserLikeType = {
+  userId: number;
+  avatar: string;
+};
+
 export type ReplyType = {
   body: string;
   id: number;

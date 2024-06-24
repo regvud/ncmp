@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PostCounterType } from "../types/counterContentTypes";
 import { CommentMapper } from "./CommentMapper";
 import { ModalImage } from "./modal/ModalImage";
+import { UserLikeMapper } from "./UserLikeComponent";
 
 interface PostComponentProps {
   post: PostCounterType;
@@ -62,8 +63,9 @@ export const PostComponent = ({ post }: PostComponentProps) => {
           {imagesLength > 1 && <button onClick={nextImage}>next image</button>}
         </div>
       )}
-      <h2>user liked: {post.users_liked}</h2>
       <h2>{post.body}</h2>
+      <button>likes: {post.likes_count}</button>
+      <UserLikeMapper userLikes={post.users_liked} />
       <button onClick={clickComments}>Comments: {post.comments_count}</button>
       {toggleComments && <CommentMapper comments={post.comments} />}
     </div>

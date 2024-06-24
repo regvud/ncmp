@@ -1,9 +1,8 @@
 from fastapi import HTTPException, UploadFile
-from sqlalchemy.orm.strategy_options import joinedload
 
 import models
 from cross_related import uuid_creator, write_image_file
-from db import db_dependency, delete_db_model, print_query_count, save_db_model
+from db import db_dependency, delete_db_model, save_db_model
 from enums import ContentTypeEnum, NotificationTypeEnum
 from exceptions import liked_exception, unliked_exception
 from schemas import LikeCounter, PostCounterSchema
@@ -19,14 +18,7 @@ def filter_popper(idx: int, iterable: list):
 
 
 def test_ul(db: db_dependency):
-    q = (
-        db.query(models.UserLike, models.User)
-        .join(models.User)
-        .filter(models.UserLike.like_id == 24)
-        .all()
-    )
-    for like, user in q:
-        print(like.user_id, user.id)
+    pass
 
 
 def get_posts_with_counters(
@@ -54,15 +46,18 @@ def get_posts_with_counters(
 
         like_user_query = (
             db.query(models.UserLike, models.User)
+            .filter(models.UserLike.like_id == cnt_like.id)
             .join(models.User)
-            .filter(models.UserLike.like_id == 24)
             .all()
         )
 
-        post_like_ids = {
-            (u.id, u.profile.avatar.avatar if u.profile.avatar else "")
-            for _, u in like_user_query[:3]
-        }
+        post_user_info = tuple(
+            {
+                "userId": user.id,
+                "avatar": user.profile.avatar.avatar if user.profile.avatar else None,
+            }
+            for _, user in like_user_query
+        )
 
         post_images = [image.__dict__ for image in post.images]
 
@@ -99,12 +94,11 @@ def get_posts_with_counters(
                 "comments_count": len(post_comments),
                 "images": post_images,
                 "likes_count": len(like_user_query),
-                "users_liked": post_like_ids,
+                "users_liked": post_user_info,
                 "comments": post_comments,
             }
         )
 
-        print_query_count()
         post_schemas.append(PostCounterSchema(**post_dict))
 
     return post_schemas

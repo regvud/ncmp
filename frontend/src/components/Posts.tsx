@@ -21,8 +21,6 @@ export const Posts = () => {
 
   useEffect(() => {
     if (inView) {
-      console.log(error);
-      console.log(status);
       fetchNextPage();
     }
   }, [fetchNextPage, inView]);
