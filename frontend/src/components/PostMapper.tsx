@@ -7,6 +7,8 @@ interface PostMapperProps {
 
 export const PostMapper = ({ posts }: PostMapperProps) => {
   return (
-    <>{posts?.map((post) => <PostComponent post={post} key={post.id} />)}</>
+    <div className="flex flex-col items-center">
+      {posts?.map((post) => <PostComponent post={post} key={post.id} />)}
+    </div>
   );
 };

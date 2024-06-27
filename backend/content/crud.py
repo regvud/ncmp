@@ -17,10 +17,6 @@ def filter_popper(idx: int, iterable: list):
     return filtered_obj
 
 
-def test_ul(db: db_dependency):
-    pass
-
-
 def get_posts_with_counters(
     db: db_dependency, posts: list[models.Post]
 ) -> list[PostCounterSchema]:
@@ -48,7 +44,6 @@ def get_posts_with_counters(
             db.query(models.UserLike, models.User)
             .filter(models.UserLike.like_id == cnt_like.id)
             .join(models.User)
-            .all()
         )
 
         post_user_info = tuple(
@@ -56,7 +51,7 @@ def get_posts_with_counters(
                 "userId": user.id,
                 "avatar": user.profile.avatar.avatar if user.profile.avatar else None,
             }
-            for _, user in like_user_query
+            for _, user in like_user_query.limit(3).all()
         )
 
         post_images = [image.__dict__ for image in post.images]
@@ -93,7 +88,7 @@ def get_posts_with_counters(
             {
                 "comments_count": len(post_comments),
                 "images": post_images,
-                "likes_count": len(like_user_query),
+                "likes_count": like_user_query.count(),
                 "users_liked": post_user_info,
                 "comments": post_comments,
             }

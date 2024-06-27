@@ -24,7 +24,7 @@ export function ModalImage({
   const imageClass = "object-contain w-[100%] h-[100%]";
 
   const modalWindowClass = togglePopup
-    ? "h-screen w-screen bg-black bg-opacity-80 fixed top-1/2 left-1/2 -transform -translate-x-1/2 -translate-y-1/2"
+    ? "bg-black bg-opacity-80 fixed top-1/2 left-1/2 -transform -translate-x-1/2 -translate-y-1/2"
     : "max-w-[60%] max-h-[50%]";
 
   const imagePath = images[0] ? `${baseURL}${images[imagePage].path}` : "";

@@ -49,10 +49,10 @@ export const PostComponent = ({ post }: PostComponentProps) => {
   }
 
   return (
-    <div className="border border-sky-500">
-      <h1 className="text-slate-400">{post.title}</h1>
+    <div className="flex flex-col items-center border border-sky-500 rounded w-[60%]">
+      <h1 className="text-slate-400"> {post.title}</h1>
       {imagesLength > 0 && (
-        <div className="flex justify-between w-[50%] h-[50%]">
+        <div className="flex justify-center">
           {imagesLength > 1 && <button onClick={prevImage}>prev image</button>}
           <ModalImage
             images={post.images}
@@ -63,11 +63,15 @@ export const PostComponent = ({ post }: PostComponentProps) => {
           {imagesLength > 1 && <button onClick={nextImage}>next image</button>}
         </div>
       )}
-      <h2>{post.body}</h2>
-      <button>likes: {post.likes_count}</button>
-      <UserLikeMapper userLikes={post.users_liked} />
-      <button onClick={clickComments}>Comments: {post.comments_count}</button>
-      {toggleComments && <CommentMapper comments={post.comments} />}
+      <div>
+        <div className="flex justify-around">
+          <span> likes: {post.likes_count}</span>
+          <UserLikeMapper userLikes={post.users_liked} />
+        </div>
+        <p>{post.body}</p>
+        <button onClick={clickComments}>Comments: {post.comments_count}</button>
+        {toggleComments && <CommentMapper comments={post.comments} />}
+      </div>
     </div>
   );
 };
