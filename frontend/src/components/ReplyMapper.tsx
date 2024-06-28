@@ -1,8 +1,9 @@
 import { ReplyType } from "../types/contentTypes";
+import { ReplyCounterType } from "../types/counterContentTypes";
 import { ReplyComponent } from "./ReplyComponent";
 
 interface ReplyMapperProps {
-  replies: ReplyType[];
+  replies: ReplyCounterType[];
 }
 export const ReplyMapper = ({ replies }: ReplyMapperProps) => {
   return (

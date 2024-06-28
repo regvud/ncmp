@@ -57,18 +57,19 @@ def get_posts_with_counters(
         post_images = [image.__dict__ for image in post.images]
 
         post_comments = []
+
         for comment in post.comments:
             cnt_like = filter_popper(comment.id, comment_likes)
-            comment_like_ids = {ul.user_id for ul in cnt_like.users_liked}
-
             comment_replies = []
+
             for reply in comment.replies:
                 cnt_like = filter_popper(reply.id, reply_likes)
-                reply_like_ids = {ul.user_id for ul in cnt_like.users_liked}
 
                 reply_dict = reply.__dict__.copy()
                 reply_dict.update(
-                    {"likes_count": len(reply_like_ids), "users_liked": reply_like_ids}
+                    {
+                        "likes_count": len(cnt_like.users_liked),
+                    }
                 )
                 comment_replies.append(reply_dict)
 
@@ -77,8 +78,7 @@ def get_posts_with_counters(
                 {
                     "replies_count": len(comment_replies),
                     "replies": comment_replies,
-                    "likes_count": len(comment_like_ids),
-                    "users_liked": comment_like_ids,
+                    "likes_count": len(cnt_like.users_liked),
                 }
             )
             post_comments.append(comment_dict)

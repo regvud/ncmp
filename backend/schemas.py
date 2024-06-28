@@ -7,6 +7,11 @@ from pydantic import BaseModel
 T = TypeVar("T")
 
 
+class CreatedUpdated(BaseModel):
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+
 class PaginatedSchema(BaseModel, Generic[T]):
     items: list[T] = []
     pages: int
@@ -16,7 +21,11 @@ class PaginatedSchema(BaseModel, Generic[T]):
 
 class StatsLikes(BaseModel):
     likes_count: int
-    users_liked: list = []
+
+
+class UserIdAvatarSchema(BaseModel):
+    userId: int
+    avatar: str
 
 
 # USER RELATED
@@ -29,16 +38,13 @@ class UserCreate(UserBase):
     is_owner: Optional[bool] = False
 
 
-class User(UserBase):
+class User(UserBase, CreatedUpdated):
     id: int
     is_active: bool
     is_owner: bool
     profile: "Profile"
     posts: list["PostNoComments"] = []
     comments: list["Comment"] = []
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 # AUTH
@@ -95,15 +101,12 @@ class ProfileUpdate(ProfileBase):
     pass
 
 
-class Profile(ProfileUpdate):
+class Profile(ProfileUpdate, CreatedUpdated):
     id: int
 
     user_id: int
     avatar: Optional["Avatar"] = None
     notifications: list["Notification"] = []
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 class AvatarBase(BaseModel):
@@ -115,11 +118,8 @@ class AvatarCreate(AvatarBase):
     pass
 
 
-class Avatar(AvatarBase):
+class Avatar(AvatarBase, CreatedUpdated):
     id: int
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 class NotificationCreate(BaseModel):
@@ -129,18 +129,14 @@ class NotificationCreate(BaseModel):
     status: bool
 
 
-class Notification(NotificationCreate):
+class Notification(NotificationCreate, CreatedUpdated):
     id: int
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 # POST RELATED
 class PostBase(BaseModel):
     title: str
     body: str
-    images: list["PostImageSchema"] = []
 
 
 class PostUpdate(PostBase):
@@ -151,44 +147,39 @@ class PostCreate(PostBase):
     pass
 
 
-class Post(PostCreate):
+class Post(PostCreate, CreatedUpdated):
     id: int
 
     user_id: int
+    images: list["PostImageSchema"] = []
     comments: list["Comment"] = []
     likes: list["UserLike"] = []
 
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
-
-class PostNoComments(PostCreate):
+class PostNoComments(PostCreate, CreatedUpdated):
     id: int
 
     user_id: int
     likes: list["UserLike"] = []
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 class PostCounterSchema(PostBase, StatsLikes):
     id: int
 
     user_id: int
+    users_liked: list[UserIdAvatarSchema] = []
+
+    images: list["PostImageSchema"] = []
 
     comments_count: int
     comments: list["CommentRepliesCounterSchema"] = []
 
 
-class PostImageSchema(BaseModel):
+class PostImageSchema(CreatedUpdated, BaseModel):
     id: int
 
     post_id: int
     path: str
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 # COMMENT
@@ -204,18 +195,15 @@ class CommentCreate(CommentBase):
     pass
 
 
-class Comment(CommentCreate):
+class Comment(CommentCreate, CreatedUpdated):
     id: int
 
     post_id: int
     user_id: int
     replies: list["Reply"] = []
 
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
-
-class CommentRepliesCounterSchema(CommentBase, StatsLikes):
+class CommentRepliesCounterSchema(CommentBase, StatsLikes, CreatedUpdated):
     id: int
 
     post_id: int
@@ -223,9 +211,6 @@ class CommentRepliesCounterSchema(CommentBase, StatsLikes):
     replies: list["ReplyCounterSchema"] = []
 
     replies_count: int
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 # REPLIES
@@ -241,15 +226,12 @@ class ReplyCreate(ReplyBase):
     pass
 
 
-class Reply(ReplyCreate):
+class Reply(ReplyCreate, CreatedUpdated):
     id: int
 
     comment_id: int
     to_user: int
     user_id: int
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 class ReplyCounterSchema(Reply, StatsLikes):
@@ -262,11 +244,8 @@ class UserLikeCreate(BaseModel):
     like_id: int
 
 
-class UserLike(UserLikeCreate):
+class UserLike(UserLikeCreate, CreatedUpdated):
     id: int
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 class LikeBase(BaseModel):
@@ -274,13 +253,10 @@ class LikeBase(BaseModel):
     content_type: str
 
 
-class Like(LikeBase):
+class Like(LikeBase, CreatedUpdated):
     id: int
 
     users_liked: list[UserLike] = []
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
 
 
 class LikeCounter(LikeBase):
@@ -301,8 +277,5 @@ class ProductBaseSchema(BaseModel):
     description: Optional[str] = None
 
 
-class ProductSchema(ProductBaseSchema):
+class ProductSchema(ProductBaseSchema, CreatedUpdated):
     id: int
-
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]

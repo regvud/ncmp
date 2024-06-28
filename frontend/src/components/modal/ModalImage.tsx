@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PrismaZoom from "react-prismazoom";
 import { baseURL } from "../../constants/urls";
 import { PostImage } from "../../types/contentTypes";
 import { ModalButton } from "./ModalButton";
+import { ReactComponent as ArrowRight } from "../../assets/buttons/arrowRight.svg";
 
 interface ModalImageProps {
   images: PostImage[];
@@ -18,14 +19,13 @@ export function ModalImage({
   prevImage,
 }: ModalImageProps) {
   const divImageRef = useRef<HTMLImageElement>(null);
-
   const [togglePopup, setTogglePopup] = useState(false);
 
-  const imageClass = "object-contain w-[100%] h-[100%]";
+  const imageClass = "object-contain w-[100%] min-h-[600px] rounded";
 
   const modalWindowClass = togglePopup
     ? "bg-black bg-opacity-80 fixed top-1/2 left-1/2 -transform -translate-x-1/2 -translate-y-1/2"
-    : "max-w-[60%] max-h-[50%]";
+    : "max-w-[80%] max-h-[50%]";
 
   const imagePath = images[0] ? `${baseURL}${images[imagePage].path}` : "";
 
@@ -46,6 +46,13 @@ export function ModalImage({
     closeImage();
   }
 
+  useEffect(() => {
+    if (togglePopup) document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "scroll";
+    };
+  }, [togglePopup]);
+
   return (
     <div
       className={modalWindowClass}
@@ -54,11 +61,15 @@ export function ModalImage({
       ref={divImageRef}
     >
       {togglePopup ? (
-        <div className="flex justify-center items-center h-screen w-screen">
+        <div className="flex justify-around items-center h-screen w-screen">
           {images.length > 1 && prevImage && (
-            <ModalButton repr="prev" onClickFunc={prevImage} />
+            <ModalButton
+              SVG={ArrowRight}
+              onClickFunc={prevImage}
+              rotate180={true}
+            />
           )}
-          <div className="flex flex-col justify-center items-center w-[80%] h-[100%]">
+          <div className="flex flex-col justify-around items-center w-[80%]">
             <button className="text-white" onClick={closeImage}>
               ☒
             </button>
@@ -67,7 +78,7 @@ export function ModalImage({
             </PrismaZoom>
           </div>
           {images.length > 1 && nextImage && (
-            <ModalButton repr="next" onClickFunc={nextImage} />
+            <ModalButton SVG={ArrowRight} onClickFunc={nextImage} />
           )}
         </div>
       ) : (

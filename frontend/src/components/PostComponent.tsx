@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { PostCounterType } from "../types/counterContentTypes";
 import { CommentMapper } from "./CommentMapper";
+import { ModalButton } from "./modal/ModalButton";
 import { ModalImage } from "./modal/ModalImage";
 import { UserLikeMapper } from "./UserLikeComponent";
+import { ReactComponent as ArrowRight } from "../assets/buttons/arrowRight.svg";
 
 interface PostComponentProps {
   post: PostCounterType;
@@ -12,7 +14,8 @@ export const PostComponent = ({ post }: PostComponentProps) => {
   const [toggleComments, setToggleComments] = useState(false);
   const [imagePage, setImagePage] = useState(0);
 
-  const imagesLength = post.images.length;
+  console.log(post.images.length);
+  const imagesLength = post?.images?.length;
 
   function clickComments() {
     setToggleComments((prev) => !prev);
@@ -52,15 +55,27 @@ export const PostComponent = ({ post }: PostComponentProps) => {
     <div className="flex flex-col items-center border border-sky-500 rounded w-[60%]">
       <h1 className="text-slate-400"> {post.title}</h1>
       {imagesLength > 0 && (
-        <div className="flex justify-center">
-          {imagesLength > 1 && <button onClick={prevImage}>prev image</button>}
+        <div className="flex justify-around border py-[10px]">
+          <>
+            {imagesLength > 1 && (
+              <ModalButton
+                SVG={ArrowRight}
+                onClickFunc={prevImage}
+                rotate180={true}
+              />
+            )}
+          </>
           <ModalImage
             images={post.images}
             imagePage={imagePage}
             nextImage={nextImage}
             prevImage={prevImage}
           />
-          {imagesLength > 1 && <button onClick={nextImage}>next image</button>}
+          <>
+            {imagesLength > 1 && (
+              <ModalButton SVG={ArrowRight} onClickFunc={nextImage} />
+            )}
+          </>
         </div>
       )}
       <div>
